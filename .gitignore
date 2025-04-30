@@ -15,3 +15,7 @@ venv/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Buildozer build directory
+bin/
+.buildozer
