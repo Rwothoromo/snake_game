@@ -11,6 +11,8 @@ Window.size = (Window.width, Window.height)
 class SnakeGame(Widget):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        # Window.bind(on_keyboard = self.keyboard)
+        
         self.cell_size = 20
         self.screen_width = Window.width
         self.screen_height = Window.height
@@ -23,6 +25,13 @@ class SnakeGame(Widget):
         # Schedule the game loop
         Clock.schedule_interval(self.update, 1.0 / self.speed)
 
+    # def keyboard(self, window, key, *args):
+    #     if key == 27 and self.sm.current != "main":
+    #         self.current = some_previous_screen
+    #         return True   # key event consumed by app
+    #     else:           
+    #         return False  # key event passed to Android
+    
     def on_touch_down(self, touch):
         """
         Handles touch input to control the snake's direction.
