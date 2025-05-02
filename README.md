@@ -1,6 +1,6 @@
 # Snake Game in Python
 
-This is a classic Snake game implemented in Python using the Pygame library. The objective of the game is to control the snake to eat food and grow in length while avoiding collisions with the walls and itself.
+This is a classic Snake game implemented in Python using the Pygame library. GitHub Copilot was also used. The objective of the game is to control the snake to eat food and grow in length while avoiding collisions with the walls and itself.
 
 ## Project Structure
 
