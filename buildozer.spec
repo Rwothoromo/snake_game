@@ -40,7 +40,7 @@ version = 1.0.0
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,python3crystax==3.6,kivy
-requirements = kivy, python3
+requirements = kivy, python3, libpython3, pygame
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -89,8 +89,8 @@ fullscreen = 0
 #android.presplash_color = #FFFFFF
 
 # (list) Permissions
-#android.permissions = INTERNET,CHANGE_WIFI_MULTICAST_STATE,ACCESS_NETWORK_STATE,ACCESS_WIFI_STATE
-android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE
+#android.permissions = INTERNET,CHANGE_WIFI_MULTICAST_STATE,ACCESS_NETWORK_STATE,ACCESS_WIFI_STATE, READ_MEDIA_VIDEO, READ_MEDIA_AUDIO
+android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_MEDIA_IMAGES, READ_EXTERNAL_STORAGE
 
 # (int) Android API to use
 # see https://developer.android.com/distribute/best-practices/develop/target-sdk
@@ -114,8 +114,11 @@ android.ndk_path = /home/rwothoromo/android-ndk-r25b
 # (str) Android NDK flags
 android.ndk_flags = -Wno-macro-redefined
 
+# (int) Android NDK API to use
+android.ndk_api = 23
+
 # (str) Android SDK directory (if empty, it will be automatically downloaded.)
-android.sdk_path = /usr/lib/android-sdk
+android.sdk_path = ~/.buildozer/android/platform/android-sdk
 
 # (str) ANT directory (if empty, it will be automatically downloaded.)
 #android.ant_path =
@@ -141,7 +144,7 @@ android.sdk_path = /usr/lib/android-sdk
 # their classes. Don't add jars that you do not need, since extra jars can slow
 # down the build process. Allows wildcards matching, for example:
 # OUYA-ODK/libs/*.jar
-#android.add_jars = foo.jar,bar.jar,path/to/more/*.jar
+android.add_jars = /usr/share/java/jaxb-api.jar,/usr/share/java/jaxb-impl.jar,/usr/share/java/jaxb-core.jar
 
 # (list) List of Java files to add to the android project (can be java or a
 # directory containing the files)

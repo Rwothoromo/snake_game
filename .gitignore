@@ -11,6 +11,7 @@ venv/
 
 # Logs
 *.log
+*_log.txt
 
 # OS files
 .DS_Store
