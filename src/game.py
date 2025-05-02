@@ -16,7 +16,7 @@ class Game:
         pygame.init()
         self.screen_width = 400
         self.screen_height = 400
-        self.cell_size = 10
+        self.cell_size = 10  # Ensure cell_size is initialized before use
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
         pygame.display.set_caption("Snake Game")
         self.clock = pygame.time.Clock()
@@ -36,6 +36,10 @@ class Game:
         Args:
             count (int): Number of obstacles to generate.
         """
+        # Ensure cell_size and screen dimensions are initialized before use
+        if not hasattr(self, 'cell_size') or not hasattr(self, 'screen_height'):
+            raise AttributeError("Game attributes 'cell_size' and 'screen_height' must be initialized before generating obstacles.")
+
         self.obstacles = []
         for _ in range(count):
             while True:
@@ -71,6 +75,8 @@ class Game:
                     self.obstacles_enabled = not self.obstacles_enabled
                     if self.obstacles_enabled:
                         self.generate_obstacles()
+                    else:
+                        self.obstacles = []  # Clear obstacles when toggled off
 
     def check_collisions(self):
         """
