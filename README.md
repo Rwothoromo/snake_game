@@ -92,7 +92,7 @@ Follow these steps to package the game for Android using Buildozer:
     ```
 10. Run the debug app on a plugged-in phone:
     ```bash
-    buildozer android debug deploy run logcat
+    buildozer android debug deploy run logcat > buildozer.log
     ```
 
 ### Using JDK 17 for Buildozer

@@ -253,15 +253,21 @@ class Game:
         if self.obstacles_enabled:
             self.generate_obstacles()
 
+    def update(self):
+        """
+        Updates the game state, including moving the snake and checking for collisions.
+        """
+        self.snake.move()
+        self.check_collisions()
+
     def run(self):
         """
         Runs the main game loop.
         """
         while self.running:
             self.handle_events()
-            self.snake.move()
-            self.check_collisions()
-            self.render()
+            self.update()  # Update the game state
+            self.render()  # Render the game objects
             self.clock.tick(self.speed)  # Adjust the game speed based on the speed attribute
 
         # Show the game over screen
