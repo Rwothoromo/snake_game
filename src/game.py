@@ -67,13 +67,32 @@ class Game:
             count (int): Number of obstacles to generate.
         """
         self.obstacles = []
+        # Calculate all possible positions on the grid
+        all_positions = [
+            (x * self.cell_size, y * self.cell_size)
+            for x in range(self.screen_width // self.cell_size)
+            for y in range((self.play_area_top // self.cell_size) + 1, self.screen_height // self.cell_size)
+        ]
+        # Filter out positions occupied by the snake or food
+        available_positions = [
+            pos for pos in all_positions
+            if pos not in self.snake.get_positions() and pos != self.food.get_position()
+        ]
+        # Check if there are enough available positions
+        if len(available_positions) < count:
+            print(f"Warning: Not enough space for {count} obstacles. Generating {len(available_positions)} obstacles instead.")
+            count = len(available_positions)
+        # Generate obstacles
         for _ in range(count):
-            while True:
-                x = random.randint(0, (self.screen_width // self.cell_size) - 1) * self.cell_size
-                y = random.randint((self.play_area_top // self.cell_size) + 1, (self.screen_height // self.cell_size) - 1) * self.cell_size
-                if (x, y) not in self.snake.get_positions() and (x, y) != self.food.get_position():
+            attempts = 0
+            while attempts < 100:  # Limit the number of attempts to prevent infinite loop
+                x, y = random.choice(available_positions)
+                if (x, y) not in self.obstacles:  # Ensure no duplicate obstacles
                     self.obstacles.append((x, y))
                     break
+                attempts += 1
+            else:
+                print("Warning: Could not place all obstacles due to space constraints.")
 
     def handle_events(self):
         """
