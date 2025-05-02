@@ -4,13 +4,12 @@ import sys
 import os  # For file operations
 from .snake import Snake
 from .food import Food
+from .constants import UI_TOP_TEXT_HEIGHT, BEST_SCORE_FILE
 
 class Game:
     """
     Represents the Snake game. Manages the game loop, rendering, and interactions between the snake, food, and obstacles.
     """
-
-    BEST_SCORE_FILE = "best_score.txt"  # File to store the best score
 
     def __init__(self):
         """
@@ -20,15 +19,16 @@ class Game:
         self.screen_width = 400
         self.screen_height = 400
         self.cell_size = 10  # Ensure cell_size is initialized before use
+        self.play_area_top = UI_TOP_TEXT_HEIGHT  # Adjust the play area to start below the UI
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
         pygame.display.set_caption("Snake Game")
         self.clock = pygame.time.Clock()
-        self.snake = Snake()
-        self.food = Food(self.screen_width, self.screen_height, self.cell_size)
+        self.snake = Snake(self.screen_width, self.screen_height, self.cell_size)
+        self.food = Food(self.screen_width, self.screen_height - UI_TOP_TEXT_HEIGHT, self.cell_size)
         self.running = True
         self.speed = 10  # Initial speed (lower value = slower snake)
         self.font = pygame.font.Font(None, 24)  # Font for displaying UI
-        self.boundary_mode = "wrap"  # Options: "wrap" or "stay"
+        self.boundary_mode = "Wrap"  # Options: "Wrap" or "Stay"
         self.obstacles_enabled = False  # Whether obstacles are enabled
         self.obstacles = []  # List of obstacle positions
         self.score = 0  # Current score
@@ -41,8 +41,8 @@ class Game:
         Returns:
             int: The best score.
         """
-        if os.path.exists(self.BEST_SCORE_FILE):
-            with open(self.BEST_SCORE_FILE, "r") as file:
+        if os.path.exists(BEST_SCORE_FILE):
+            with open(BEST_SCORE_FILE, "r") as file:
                 try:
                     return int(file.read().strip())
                 except ValueError:
@@ -54,7 +54,7 @@ class Game:
         Saves the best score to a file.
         """
         try:
-            with open(self.BEST_SCORE_FILE, "w") as file:
+            with open(BEST_SCORE_FILE, "w") as file:
                 file.write(str(self.best_score))
         except (IOError, OSError) as e:
             print(f"Error saving best score: {e}")
@@ -66,15 +66,11 @@ class Game:
         Args:
             count (int): Number of obstacles to generate.
         """
-        # Ensure cell_size and screen dimensions are initialized before use
-        if not hasattr(self, 'cell_size') or not hasattr(self, 'screen_height'):
-            raise AttributeError("Game attributes 'cell_size' and 'screen_height' must be initialized before generating obstacles.")
-
         self.obstacles = []
         for _ in range(count):
             while True:
                 x = random.randint(0, (self.screen_width // self.cell_size) - 1) * self.cell_size
-                y = random.randint(0, (self.screen_height // self.cell_size) - 1) * self.cell_size
+                y = random.randint((self.play_area_top // self.cell_size) + 1, (self.screen_height // self.cell_size) - 1) * self.cell_size
                 if (x, y) not in self.snake.get_positions() and (x, y) != self.food.get_position():
                     self.obstacles.append((x, y))
                     break
@@ -100,7 +96,7 @@ class Game:
                 elif event.key == pygame.K_EQUALS:  # Speed up the snake
                     self.speed = min(20, self.speed + 1)  # Maximum speed limit
                 elif event.key == pygame.K_b:  # Toggle boundary mode
-                    self.boundary_mode = "wrap" if self.boundary_mode == "stay" else "stay"
+                    self.boundary_mode = "Wrap" if self.boundary_mode == "Stay" else "Stay"
                 elif event.key == pygame.K_o:  # Toggle obstacles
                     self.obstacles_enabled = not self.obstacles_enabled
                     if self.obstacles_enabled:
@@ -114,14 +110,17 @@ class Game:
         """
         head_x, head_y = self.snake.get_head_position()
 
-        if self.boundary_mode == "wrap":
-            # Wrap around the screen
+        if self.boundary_mode == "Wrap":
+            # Wrap around the screen, allowing the snake to pass through all edges
             head_x %= self.screen_width
-            head_y %= self.screen_height
+            head_y = (head_y - self.play_area_top) % (self.screen_height - self.play_area_top) + self.play_area_top
             self.snake.positions[0] = (head_x, head_y)
-        elif self.boundary_mode == "stay":
-            # Check collision with walls
-            if head_x < 0 or head_x >= self.screen_width or head_y < 0 or head_y >= self.screen_height:
+        elif self.boundary_mode == "Stay":
+            # Check collision with walls, including the top boundary (text area)
+            if (
+                head_x < 0 or head_x >= self.screen_width or
+                head_y < self.play_area_top or head_y >= self.screen_height
+            ):
                 self.running = False
 
         # Check collision with itself
@@ -164,13 +163,20 @@ class Game:
         best_score_text = self.font.render(f"Best: {self.best_score}", True, (255, 255, 255))
         self.screen.blit(best_score_text, (10, 30))
 
-        # Draw the boundary mode UI
-        boundary_text = self.font.render(f"Boundary: {self.boundary_mode}", True, (255, 255, 255))
+        # Draw the boundary mode UI with toggle key
+        boundary_text = self.font.render(f"Boundary: {self.boundary_mode} - Press 'B'", True, (255, 255, 255))
         self.screen.blit(boundary_text, (10, 50))
 
-        # Draw the obstacles UI
-        obstacles_text = self.font.render(f"Obstacles: {'On' if self.obstacles_enabled else 'Off'}", True, (255, 255, 255))
+        # Draw the obstacles UI with toggle key
+        obstacles_text = self.font.render(f"Obstacles: {'On' if self.obstacles_enabled else 'Off'} - Press 'O'", True, (255, 255, 255))
         self.screen.blit(obstacles_text, (10, 70))
+
+        # Draw the speed controls
+        speed_text = self.font.render(f"Speed: {self.speed} - Press '=' or '-'", True, (255, 255, 255))
+        self.screen.blit(speed_text, (10, 90))
+
+        # Draw a white line below the text area
+        pygame.draw.line(self.screen, (255, 255, 255), (0, self.play_area_top), (self.screen_width, self.play_area_top), 2)
 
         pygame.display.flip()  # Update the display
 
@@ -211,6 +217,19 @@ class Game:
                     elif event.key == pygame.K_q:  # Quit the game
                         pygame.quit()
                         sys.exit()
+
+    def restart_game(self):
+        """
+        Reinitializes the game state for a restart.
+        """
+        self.snake = Snake(self.screen_width, self.screen_height, self.cell_size)
+        self.food = Food(self.screen_width, self.screen_height, self.cell_size, self.play_area_top)  # Ensure food respects play_area_top
+        self.running = True
+        self.speed = 10
+        self.score = 0
+        self.obstacles = []
+        if self.obstacles_enabled:
+            self.generate_obstacles()
 
     def run(self):
         """
