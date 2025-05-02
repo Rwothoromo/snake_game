@@ -7,12 +7,12 @@ This is a classic Snake game implemented in Python using the Pygame library. The
 ```
 snake_game
 ├── src
-│   ├── main.py       # Entry point of the game
-│   ├── snake.py      # Contains the Snake class
-│   ├── food.py       # Contains the Food class
-│   └── game.py       # Contains the Game class
-├── requirements.txt   # Lists the dependencies
-└── README.md          # Documentation for the project
+│   ├── snake.py        # Contains the Snake class
+│   ├── food.py         # Contains the Food class
+│   └── game.py         # Contains the Game class
+├── requirements.txt    # Lists the dependencies
+├── main.py             # Entry point of the game
+└── README.md           # Documentation for the project
 ```
 ## Requirements
 
@@ -32,9 +32,9 @@ To run this game, you need to have Python installed.
 4. Run the game using the following command:
 
 ```bash
-python src/main.py
+python main.py
 # Alt way to run it as a module or standalone project
-# python3 -m src.main
+# python3 -m main
 ```
 
 ## Features

@@ -15,3 +15,18 @@ venv/
 # OS files
 .DS_Store
 Thumbs.db
+
+.buildozer/
+buildozer.log
+
+bin
+
+# Python cache
+*.pyc
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+eggs/
+.eggs/

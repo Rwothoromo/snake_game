@@ -1,7 +1,7 @@
 import pygame
 import sys
-from snake import Snake
-from food import Food
+from .snake import Snake
+from .food import Food
 
 class Game:
     """
