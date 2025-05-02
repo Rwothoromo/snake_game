@@ -53,8 +53,11 @@ class Game:
         """
         Saves the best score to a file.
         """
-        with open(self.BEST_SCORE_FILE, "w") as file:
-            file.write(str(self.best_score))
+        try:
+            with open(self.BEST_SCORE_FILE, "w") as file:
+                file.write(str(self.best_score))
+        except (IOError, OSError) as e:
+            print(f"Error saving best score: {e}")
 
     def generate_obstacles(self, count=5):
         """
