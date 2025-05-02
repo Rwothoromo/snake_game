@@ -66,6 +66,10 @@ class Game:
         Args:
             count (int): Number of obstacles to generate.
         """
+        # Ensure cell_size and screen dimensions are initialized before use
+        if not hasattr(self, 'cell_size') or not hasattr(self, 'screen_height'):
+            raise AttributeError("Game attributes 'cell_size' and 'screen_height' must be initialized before generating obstacles.")
+
         self.obstacles = []
         for _ in range(count):
             while True:
