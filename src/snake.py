@@ -1,3 +1,6 @@
+import random
+from .constants import UI_TOP_TEXT_HEIGHT
+
 class Snake:
     """
     Represents the snake in the Snake game.
@@ -8,13 +11,28 @@ class Snake:
         grow_flag (bool): Indicates whether the snake should grow in the next move.
     """
 
-    def __init__(self):
+    def __init__(self, screen_width, screen_height, cell_size):
         """
-        Initializes the Snake object with default positions, direction, and growth flag.
+        Initializes the Snake object with random positions, direction, and growth flag.
+
+        Args:
+            screen_width (int): Width of the game screen.
+            screen_height (int): Height of the game screen.
+            cell_size (int): Size of each grid cell.
         """
-        self.positions = [(100, 100), (90, 100), (80, 100)]  # Initial snake body
-        self.direction = (10, 0)  # Initially moving right
+        self.direction = (cell_size, 0)  # Initially moving right
         self.grow_flag = False  # Snake does not grow by default
+
+        # Randomly generate the starting head position within the play area
+        head_x = random.randint(0, (screen_width // cell_size) - 1) * cell_size
+        head_y = random.randint(UI_TOP_TEXT_HEIGHT // cell_size, (screen_height // cell_size) - 1) * cell_size
+
+        # Initialize the snake's body with three segments
+        self.positions = [
+            (head_x, head_y),
+            (head_x - cell_size, head_y),
+            (head_x - 2 * cell_size, head_y)
+        ]
 
     def move(self):
         """
