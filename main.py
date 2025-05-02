@@ -16,7 +16,7 @@ class SnakeGame(Widget):
         self.cell_size = 20
         self.screen_width = Window.width
         self.screen_height = Window.height
-        self.snake = Snake()
+        self.snake = Snake(self.screen_width, self.screen_height, self.cell_size)
         self.food = Food(self.screen_width, self.screen_height, self.cell_size)
         self.speed = 10
         self.boundary_mode = "wrap"
@@ -96,21 +96,23 @@ class SnakeGame(Widget):
             Rectangle(pos=self.food.position, size=(self.cell_size, self.cell_size))
 
 
-class SnakeApp(App):
-    def build(self):
-        return SnakeGame()
-
-
-if __name__ == "__main__":
-    SnakeApp().run()
+# Desktop version
 import pygame
 import sys
 from src.game import Game
+import platform
 
-def main():
+def main_desktop():
     pygame.init()
     game = Game()
     game.run()
 
+class SnakeApp(App):
+    def build(self):
+        return SnakeGame()
+
 if __name__ == "__main__":
-    main()
+    if platform.system() == "Linux" or platform.system() == "Windows" or platform.system() == "Darwin":
+        main_desktop()
+    else:
+        SnakeApp().run()

@@ -103,15 +103,12 @@ Buildozer works well with JDK 17. Follow these steps to configure JDK 17:
     ```bash
     sudo apt install openjdk-17-jdk
     ```
-
 2. Set JDK 17 as the default Java version:
     ```bash
     sudo update-alternatives --config java
     sudo update-alternatives --config javac
     ```
-
 3. Select the option corresponding to JDK 17 (e.g., `/usr/lib/jvm/java-17-openjdk-amd64/bin/java`).
-
 4. Persist JDK 17 in your environment:
     ```bash
     export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
@@ -119,13 +116,11 @@ Buildozer works well with JDK 17. Follow these steps to configure JDK 17:
     echo 'export PATH=$JAVA_HOME/bin:$PATH' >> ~/.bashrc
     source ~/.bashrc
     ```
-
 5. Verify the change:
     ```bash
     java -version
     ```
    It should display Java 17.
-
 6. Retry the Buildozer commands:
     ```bash
     buildozer android clean
