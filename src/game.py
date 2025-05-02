@@ -1,6 +1,7 @@
 import random  # For generating random obstacle positions
 import pygame
 import sys
+import os  # For file operations
 from .snake import Snake
 from .food import Food
 
@@ -8,6 +9,8 @@ class Game:
     """
     Represents the Snake game. Manages the game loop, rendering, and interactions between the snake, food, and obstacles.
     """
+
+    BEST_SCORE_FILE = "best_score.txt"  # File to store the best score
 
     def __init__(self):
         """
@@ -24,10 +27,34 @@ class Game:
         self.food = Food(self.screen_width, self.screen_height, self.cell_size)
         self.running = True
         self.speed = 10  # Initial speed (lower value = slower snake)
-        self.font = pygame.font.Font(None, 24)  # Font for displaying speed
+        self.font = pygame.font.Font(None, 24)  # Font for displaying UI
         self.boundary_mode = "wrap"  # Options: "wrap" or "stay"
         self.obstacles_enabled = False  # Whether obstacles are enabled
         self.obstacles = []  # List of obstacle positions
+        self.score = 0  # Current score
+        self.best_score = self.load_best_score()  # Load the best score from file
+
+    def load_best_score(self):
+        """
+        Loads the best score from a file. If the file does not exist, returns 0.
+
+        Returns:
+            int: The best score.
+        """
+        if os.path.exists(self.BEST_SCORE_FILE):
+            with open(self.BEST_SCORE_FILE, "r") as file:
+                try:
+                    return int(file.read().strip())
+                except ValueError:
+                    return 0  # Default to 0 if the file is corrupted
+        return 0
+
+    def save_best_score(self):
+        """
+        Saves the best score to a file.
+        """
+        with open(self.BEST_SCORE_FILE, "w") as file:
+            file.write(str(self.best_score))
 
     def generate_obstacles(self, count=5):
         """
@@ -36,10 +63,6 @@ class Game:
         Args:
             count (int): Number of obstacles to generate.
         """
-        # Ensure cell_size and screen dimensions are initialized before use
-        if not hasattr(self, 'cell_size') or not hasattr(self, 'screen_height'):
-            raise AttributeError("Game attributes 'cell_size' and 'screen_height' must be initialized before generating obstacles.")
-
         self.obstacles = []
         for _ in range(count):
             while True:
@@ -102,6 +125,7 @@ class Game:
         if self.snake.get_head_position() == self.food.position:
             self.snake.grow()
             self.food.randomize_position(self.snake.get_positions())
+            self.score += 1  # Increment score when food is eaten
 
         # Check collision with obstacles
         if self.obstacles_enabled and self.snake.get_head_position() in self.obstacles:
@@ -125,36 +149,47 @@ class Game:
             for obstacle in self.obstacles:
                 pygame.draw.rect(self.screen, (128, 128, 128), pygame.Rect(obstacle[0], obstacle[1], self.cell_size, self.cell_size))
 
-        # Draw the speed UI
-        speed_text = self.font.render(f"Speed: {self.speed}", True, (255, 255, 255))
-        self.screen.blit(speed_text, (10, 10))
+        # Draw the score UI
+        score_text = self.font.render(f"Score: {self.score}", True, (255, 255, 255))
+        self.screen.blit(score_text, (10, 10))
+
+        # Draw the best score UI
+        best_score_text = self.font.render(f"Best: {self.best_score}", True, (255, 255, 255))
+        self.screen.blit(best_score_text, (10, 30))
 
         # Draw the boundary mode UI
         boundary_text = self.font.render(f"Boundary: {self.boundary_mode}", True, (255, 255, 255))
-        self.screen.blit(boundary_text, (10, 30))
+        self.screen.blit(boundary_text, (10, 50))
 
         # Draw the obstacles UI
         obstacles_text = self.font.render(f"Obstacles: {'On' if self.obstacles_enabled else 'Off'}", True, (255, 255, 255))
-        self.screen.blit(obstacles_text, (10, 50))
+        self.screen.blit(obstacles_text, (10, 70))
 
         pygame.display.flip()  # Update the display
 
     def game_over(self):
         """
         Displays the game over screen and waits for the player to quit or restart.
+        Updates the best score if the current score exceeds it.
         """
+        if self.score > self.best_score:
+            self.best_score = self.score  # Update best score
+            self.save_best_score()  # Save the new best score to file
+
         font = pygame.font.Font(None, 36)
         self.screen.fill((0, 0, 0))  # Clear the screen with black
 
-        # Render the three lines of the game over message
+        # Render the game over message
         line1 = font.render("Game Over!", True, (255, 255, 255))
-        line2 = font.render("Press R to Restart", True, (255, 255, 255))
-        line3 = font.render("Or Q to Quit", True, (255, 255, 255))
+        line2 = font.render(f"Score: {self.score}", True, (255, 255, 255))
+        line3 = font.render(f"Best: {self.best_score}", True, (255, 255, 255))
+        line4 = font.render("Press R to Restart or Q to Quit", True, (255, 255, 255))
 
         # Position the lines on the screen
-        self.screen.blit(line1, (self.screen_width // 2 - line1.get_width() // 2, self.screen_height // 2 - 40))
-        self.screen.blit(line2, (self.screen_width // 2 - line2.get_width() // 2, self.screen_height // 2))
-        self.screen.blit(line3, (self.screen_width // 2 - line3.get_width() // 2, self.screen_height // 2 + 40))
+        self.screen.blit(line1, (self.screen_width // 2 - line1.get_width() // 2, self.screen_height // 2 - 60))
+        self.screen.blit(line2, (self.screen_width // 2 - line2.get_width() // 2, self.screen_height // 2 - 30))
+        self.screen.blit(line3, (self.screen_width // 2 - line3.get_width() // 2, self.screen_height // 2))
+        self.screen.blit(line4, (self.screen_width // 2 - line4.get_width() // 2, self.screen_height // 2 + 30))
 
         pygame.display.flip()
 
