@@ -42,6 +42,10 @@ class Food:
         # Randomly select a position from the valid ones
         if valid_positions:
             self.position = random.choice(valid_positions)
+        else:
+            # Fallback: Place the food at a default position (e.g., top-left corner of the play area)
+            print("Warning: No valid positions for food. Using fallback position.")
+            self.position = (0, self.play_area_top)
 
     def get_position(self):
         """

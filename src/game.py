@@ -122,6 +122,9 @@ class Game:
                         self.generate_obstacles()
                     else:
                         self.obstacles = []  # Clear obstacles when toggled off
+                else:
+                    # Ignore unrecognized key presses
+                    print(f"Unrecognized key pressed: {event.key}")
 
     def check_collisions(self):
         """
