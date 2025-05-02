@@ -222,7 +222,7 @@ class Game:
         """
         Reinitializes the game state for a restart.
         """
-        self.snake = Snake()
+        self.snake = Snake(self.screen_width, self.screen_height, self.cell_size)
         self.food = Food(self.screen_width, self.screen_height, self.cell_size, self.play_area_top)  # Ensure food respects play_area_top
         self.running = True
         self.speed = 10
