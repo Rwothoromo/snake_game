@@ -26,25 +26,47 @@ To run this game, you need to have Python installed.
 
 1. Clone the repository or download the project files.
 2. Navigate to the project directory.
-3. Create and activate a virtual environment:
+3. Install Python 3.8 ([steps](https://askubuntu.com/questions/1493434/how-to-install-python3-8-on-ubuntu-23-04)).
     ```bash
-    python3 -m venv venv
+    sudo apt-get update
+
+    sudo apt-get install -y build-essential libssl-dev zlib1g-dev libbz2-dev \
+    libreadline-dev libsqlite3-dev wget curl llvm \
+    libncurses5-dev libncursesw5-dev xz-utils tk-dev \
+    libffi-dev liblzma-dev python3-openssl git \
+    libcairo2-dev libcups2-dev libdbus-1-dev
+
+    mkdir ~/python38
+    cd ~/python38
+    wget https://www.python.org/ftp/python/3.8.16/Python-3.8.16.tgz
+    tar -xf Python-3.8.16.tgz
+
+    cd Python-3.8.16
+
+    ./configure --enable-optimizations
+    make -j$(nproc)
+    sudo make install
+    python3.8 --version
+    ```
+4. Create and activate a virtual environment:
+    ```bash
+    python3.8 -m venv venv
     source venv/bin/activate  # On Linux/macOS
     venv\Scripts\activate     # On Windows
     ```
-4. Install the required dependencies:
+5. Install the required dependencies:
     ```bash
     pip install -r requirements.txt
     ```
-5. Reset the best score (optional):
+6. Reset the best score (optional):
    - Open the `best_score.txt` file in the root directory and set its content to `0`. Or run:
    ```bash
    echo 0 > best_score.txt
    ```
-6. Run the game using the following command:
+7. Run the game using the following command:
     ```bash
     python main.py
-    # python3 -m main # as a module or standalone project
+    # python3.8 -m main # as a module or standalone project
     ```
 
 ## How to Build and Run the Game on Android
@@ -53,12 +75,12 @@ Follow these steps to package the game for Android using Buildozer:
 
 ### Prerequisites
 
-1. Install Python and pip.
+1. Install pip.
 2. Install Buildozer and its dependencies:
     ```bash
     pip install buildozer
     sudo apt install -y python3-pip python3-setuptools python3-virtualenv
-    sudo apt install -y build-essential libssl-dev libffi-dev python3-dev
+    sudo apt install -y build-essential libssl-dev libffi-dev python3-dev pkg-config
     sudo apt install -y libsqlite3-dev
     sudo apt install -y openjdk-17-jdk unzip zlib1g-dev libncurses5 libstdc++6 libgtk2.0-0 libpangox-1.0-0 libpangoxft-1.0-0 libjaxb-java
     sudo apt install -y cmake
@@ -196,3 +218,5 @@ Buildozer works well with JDK 17. Follow these steps to configure JDK 17:
 - Best score saved between sessions.
 
 Enjoy playing the classic Snake game!
+
+apktool d your_app.apk
