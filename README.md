@@ -1,6 +1,6 @@
 # Snake Game in Python
 
-This is a classic Snake game implemented in Python using the Kivy library. GitHub Copilot was also used. The objective of the game is to control the snake to eat food and grow in length while avoiding collisions with the walls and itself.
+This is a classic Snake game implemented in Python using the Pygame and Kivy libraries. GitHub Copilot was also used. The objective of the game is to control the snake to eat food and grow in length while avoiding collisions with the walls and itself.
 
 ## Project Structure
 
@@ -12,8 +12,9 @@ snake_game
 │   └── game.py         # Contains the Pygame-based Game class (optional)
 ├── main.py             # Entry point of the game (Kivy-based implementation)
 ├── requirements.txt    # Lists the dependencies
-├── buildozer.spec      # Configuration file for building the APK (Android Package Kit or Android Application Package)
+├── buildozer.spec      # Config file for building the APK (Android Package Kit or Android Application Package)
 ├── .gitignore          # Specifies files and directories to ignore in Git
+├── best_score.txt      # Stores the best score
 └── README.md           # Documentation for the project
 ```
 
@@ -21,7 +22,7 @@ snake_game
 
 To run this game, you need to have Python installed.
 
-## How to Run the Game
+## How to Run the Game (For Python - Desktop)
 
 1. Clone the repository or download the project files.
 2. Navigate to the project directory.
@@ -32,7 +33,12 @@ To run this game, you need to have Python installed.
     venv\Scripts\activate     # On Windows
     pip install -r requirements.txt
     ```
-4. Run the game using the following command:
+4. Reset the best score (optional):
+   - Open the `best_score.txt` file in the root directory and set its content to `0`. Or run:
+   ```bash
+   echo 0 > best_score.txt
+   ```
+5. Run the game using the following command:
     ```bash
     python main.py
     # python3 -m main # as a module or standalone project
@@ -131,6 +137,7 @@ Buildozer works well with JDK 17. Follow these steps to configure JDK 17:
 2. Install the APK on your device.
 3. Launch the game and enjoy!
 
+
 ## Features
 
 - Control the snake using touch gestures (on Android) or arrow keys (on desktop).
@@ -138,5 +145,7 @@ Buildozer works well with JDK 17. Follow these steps to configure JDK 17:
 - The game ends if the snake collides with the walls or itself.
 - Adjustable speed and boundary modes (wrap or stay within boundaries).
 - Playable on both desktop and Android devices.
+- Score tracking based on the number of food items eaten.
+- Best score saved between sessions.
 
 Enjoy playing the classic Snake game!

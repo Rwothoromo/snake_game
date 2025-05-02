@@ -17,5 +17,18 @@ venv/
 Thumbs.db
 
 # Buildozer build directory
+.buildozer/
+buildozer.log
+
+# Kivy build directory
 bin/
-.buildozer
+
+# Python cache
+*.pyc
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+eggs/
+.eggs/
