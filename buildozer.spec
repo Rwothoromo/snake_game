@@ -118,7 +118,7 @@ android.ndk_flags = -Wno-macro-redefined
 android.ndk_api = 23
 
 # (str) Android SDK directory (if empty, it will be automatically downloaded.)
-android.sdk_path = ~/.buildozer/android/platform/android-sdk
+android.sdk_path = /home/rwothoromo/Desktop/code/copilot/snake_game/.buildozer/android/platform/android-sdk
 
 # (str) ANT directory (if empty, it will be automatically downloaded.)
 #android.ant_path =
@@ -247,10 +247,10 @@ log_level = 2
 warn_on_root = 1
 
 # (str) Path to build artifact storage, absolute or relative to spec file
-#build_dir = ./.buildozer
+#build_dir = /home/rwothoromo/Desktop/code/copilot/snake_game/.buildozer
 
 # (str) Path to build output (i.e. .apk, .ipa) storage
-#bin_dir = ./bin
+#bin_dir = /home/rwothoromo/Desktop/code/copilot/snake_game/bin
 
 #    -----------------------------------------------------------------------------
 #    List as sections

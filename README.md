@@ -30,11 +30,13 @@ To run this game, you need to have Python installed.
     ```bash
     sudo apt-get update
 
-    sudo apt-get install -y build-essential libssl-dev zlib1g-dev libbz2-dev \
-    libreadline-dev libsqlite3-dev wget curl llvm \
-    libncurses5-dev libncursesw5-dev xz-utils tk-dev \
-    libffi-dev liblzma-dev python3-openssl git \
-    libcairo2-dev libcups2-dev libdbus-1-dev
+    sudo apt-get install -y build-essential libssl-dev \
+    zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev \
+    wget curl llvm libncurses5-dev libncursesw5-dev xz-utils \
+    tk-dev libffi-dev liblzma-dev python3-openssl git libcairo2-dev \
+    libcups2-dev libdbus-1-dev
+
+    export LDFLAGS="-lm"
 
     mkdir ~/python38
     cd ~/python38
@@ -56,16 +58,15 @@ To run this game, you need to have Python installed.
     ```
 5. Install the required dependencies:
     ```bash
-    pip install -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt
     ```
-6. Reset the best score (optional):
-   - Open the `best_score.txt` file in the root directory and set its content to `0`. Or run:
-   ```bash
-   echo 0 > best_score.txt
-   ```
+6. Reset the best score (optional) - Open `best_score.txt` and set its content to `0`. Or run:
+    ```bash
+    echo 0 > best_score.txt
+    ```
 7. Run the game using the following command:
     ```bash
-    python main.py
+    python3.8 main.py
     # python3.8 -m main # as a module or standalone project
     ```
 
@@ -79,49 +80,102 @@ Follow these steps to package the game for Android using Buildozer:
 2. Install Buildozer and its dependencies:
     ```bash
     pip install buildozer
-    sudo apt install -y python3-pip python3-setuptools python3-virtualenv
-    sudo apt install -y build-essential libssl-dev libffi-dev python3-dev pkg-config
-    sudo apt install -y libsqlite3-dev
-    sudo apt install -y openjdk-17-jdk unzip zlib1g-dev libncurses5 libstdc++6 libgtk2.0-0 libpangox-1.0-0 libpangoxft-1.0-0 libjaxb-java
-    sudo apt install -y cmake
+
+    sudo apt install -y python3-pip python3-setuptools \
+    python3-virtualenv openjdk-17-jdk unzip libstdc++6 libgtk2.0-0 \
+    libpangoxft-1.0-0 libjaxb-java cmake
     ```
-3. Install the required Python dependencies:
-    ```bash
-    pip install -r requirements.txt
-    ```
-4. Initialize Buildozer (if not already done):
+3. Initialize Buildozer (if not already done):
     ```bash
     buildozer init
     ```
-5. Edit the `buildozer.spec` file to configure your app. Refer to the [Buildozer documentation](https://buildozer.readthedocs.io/en/latest/specifications.html#specifications) and [Android-for-Python documentation](https://github.com/Android-for-Python/Android-for-Python-Users#changing-buildozerspec) for details.
-6. Download the [Android Native Development Kit (NDK)](https://developer.android.com/ndk/downloads/) and [Android SDK Platform-Tools](https://developer.android.com/tools/releases/platform-tools). Set the NDK and SDK paths in `buildozer.spec`:
+4. Edit the `buildozer.spec` file to configure your app. Refer to the [Buildozer documentation](https://buildozer.readthedocs.io/en/latest/specifications.html#specifications) and [Android-for-Python documentation](https://github.com/Android-for-Python/Android-for-Python-Users#changing-buildozerspec) for details.
+5. Download the [Android Native Development Kit (NDK)](https://developer.android.com/ndk/downloads/) and [Android SDK Platform-Tools](https://developer.android.com/tools/releases/platform-tools). Set the NDK and SDK paths in `buildozer.spec`:
     ```plaintext
-    android.sdk_path = ~/.buildozer/android/platform/android-sdk
+    android.sdk_path = /home/<username>/Desktop/code/copilot/snake_game/.buildozer/android/platform/android-sdk
     android.ndk_path = /home/<username>/android-ndk-r25b
     ```
-7. After changing the `buildozer.spec` file (or any of the dependencies), users must do an appclean:
+6. (Optional) After changing `buildozer.spec`, you can do a complete appclean:
     ```bash
     buildozer appclean
     ```
-8. Set the paths in your terminal and check `ANDROIDSDK` and `ANDROIDNDK` paths in your environment:
+7. (In a separate terminal) Install Android Command-Line Tools: Download and install the Android SDK command-line tools:
     ```bash
-    export ANDROIDSDK=/usr/lib/android-sdk
-    export ANDROIDNDK=/home/<username>/android-ndk-r25b
+    mkdir -p .buildozer/android/platform/android-sdk/cmdline-tools/latest/
+    cd .buildozer/android/platform/android-sdk/cmdline-tools/latest/
+    wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+    unzip cmdline-tools.zip
+    mv cmdline-tools/* .
+    rmdir cmdline-tools
+    ```
+8. Set the relevant paths in your terminal and check them in your environment:
+    ```bash
+    export ANDROIDSDK=$(pwd)/.buildozer/android/platform/android-sdk
+    export ANDROIDNDK=$HOME/android-ndk-r25b
+    export ANDROID_HOME=$(pwd)/.buildozer/android/platform/android-sdk
+    export ANDROID_SDK_ROOT=$(pwd)/.buildozer/android/platform/android-sdk
+
     echo $ANDROIDSDK
     echo $ANDROIDNDK
+    echo $ANDROID_HOME
+    echo $ANDROID_SDK_ROOT
     ```
-9. Build the APK. This will generate an APK file in the `bin/` directory:
+9. Persist the environment variables:
+    ```bash
+    echo 'export ANDROIDSDK=$(pwd)/.buildozer/android/platform/android-sdk' >> ~/.bashrc
+    echo 'export ANDROIDNDK=$HOME/android-ndk-r25b' >> ~/.bashrc
+    echo 'export ANDROID_HOME=$(pwd)/.buildozer/android/platform/android-sdk' >> ~/.bashrc
+    echo 'export ANDROID_SDK_ROOT=$(pwd)/.buildozer/android/platform/android-sdk' >> ~/.bashrc
+    source ~/.bashrc
+    ```
+10. (In a new terminal) Verify the Installation: Ensure the `sdkmanager` tool is available:
+    ```bash
+    ls -l .buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager
+    .buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --list
+    ```
+11. Accept SDK Licenses: Accept the Android SDK licenses to avoid further issues:
+    ```bash
+    .buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses -y
+    ```
+    This should resolve the issue with the missing `sdkmanager`.
+12. Automatically fix missing libs:
+    ```bash
+    chmod +x fix_buildozer_jdk17.sh
+    ./fix_buildozer_jdk17.sh
+    ```
+    Make sure buildozer android has already initialized your .buildozer folder before running this script.
+13. Or manually create a `jaxb-libs` directory:
+    ```bash
+    mkdir .buildozer/jaxb-libs/
+    ```
+14. Then download these JARs into it:
+    | Library                | Suggested Version |
+    | ---------------------- | ----------------- |
+    | [jakarta.xml.bind-api](https://mvnrepository.com/artifact/jakarta.xml.bind/jakarta.xml.bind-api/2.3.3) | `2.3.3` or later |
+    | [jaxb-runtime](https://mvnrepository.com/artifact/org.glassfish.jaxb/jaxb-runtime/2.3.3)         | `2.3.3` or later   |
+    | [javax.activation-api](https://mvnrepository.com/artifact/jakarta.activation/jakarta.activation-api/1.2.2) | `1.2.0`  |
+    | [jaxb-core](https://mvnrepository.com/artifact/com.sun.xml.bind/jaxb-core/2.3.0) (optional) | `2.3.0` or later    |
+    This will ensure that `javax.xml.bind` module is resolved for JDK 17.
+15. Override the wrong/old sdkmanager path with a symbolic link:
+    ```bash
+    rm -f .buildozer/android/platform/android-sdk/tools/bin/sdkmanager
+    mkdir -p .buildozer/android/platform/android-sdk/tools/bin
+    ln -s .buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/ .buildozer/android/platform/android-sdk/tools/bin/sdkmanager
+
+    .buildozer/android/platform/android-sdk/tools/bin/sdkmanager --list
+    ```
+16. Build the APK. This will generate an APK file in the `bin/` directory:
     ```bash
     buildozer android clean
-    buildozer -v android debug --log-level 2 > logs/buildozer.log
+    buildozer -v android debug --log-level 2 --debug > logs/buildozer.log
     cp logs/buildozer.log logs/buildozer_log.txt
     ```
-10. Run the debug app on a plugged-in phone:
+17. Or deploy and run the debug app directly on a plugged-in phone:
     ```bash
     buildozer android debug deploy run logcat > logs/buildozer.log
     cp logs/buildozer.log logs/buildozer_log.txt
     ```
-11. To check logs when running the app:
+18. To check logs when running the app:
     ```bash
     adb logcat | grep "com.rwothoromo.game.snakegame" | grep -A 10 -B 10 "ANR" > logs/android_apk.log
     cp logs/android_apk.log logs/android_apk_log.txt
@@ -132,74 +186,25 @@ Follow these steps to package the game for Android using Buildozer:
 
 Buildozer works well with JDK 17. Follow these steps to configure JDK 17:
 
-1. Install JDK 17:
-    ```bash
-    sudo apt install openjdk-17-jdk
-    ```
-2. Set JDK 17 as the default Java version:
+1. Set JDK 17 as the default Java version:
     ```bash
     sudo update-alternatives --config java
     sudo update-alternatives --config javac
     ```
-3. Select the option corresponding to JDK 17 (e.g., `/usr/lib/jvm/java-17-openjdk-amd64/bin/java`).
-4. Persist JDK 17 in your environment:
+2. Select the option corresponding to JDK 17 (e.g., `/usr/lib/jvm/java-17-openjdk-amd64/bin/java`).
+3. Persist JDK 17 in your environment:
     ```bash
     export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
     echo 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64' >> ~/.bashrc
     echo 'export PATH=$JAVA_HOME/bin:$PATH' >> ~/.bashrc
     source ~/.bashrc
     ```
-5. Verify the change:
+4. Verify the change:
     ```bash
     java -version
     ```
    It should display Java 17.
 
-6. Automatically fix missing libs:
-    ```bash
-    chmod +x fix_buildozer_jdk17.sh
-    sudo -H ./fix_buildozer_jdk17.sh
-    ```
-    Make sure buildozer android has already initialized your .buildozer folder before running this script.
-7. Or manually create a `jaxb-libs` directory:
-    ```bash
-    mkdir .buildozer/jaxb-libs/
-    ```
-8. Download these JARs into it:
-    | Library                | Suggested Version |
-    | ---------------------- | ----------------- |
-    | [jakarta.xml.bind-api](https://mvnrepository.com/artifact/jakarta.xml.bind/jakarta.xml.bind-api/2.3.3) | `2.3.3` or later |
-    | [jaxb-runtime](https://mvnrepository.com/artifact/org.glassfish.jaxb/jaxb-runtime/2.3.3)         | `2.3.3` or later   |
-    | [javax.activation-api](https://mvnrepository.com/artifact/jakarta.activation/jakarta.activation-api/1.2.2) | `1.2.0`  |
-    | [jaxb-core](https://mvnrepository.com/artifact/com.sun.xml.bind/jaxb-core/2.3.0) (optional) | `2.3.0` or later    |
-    This will ensure that `javax.xml.bind` module is resolved for JDK 17.
-9. Install Android Command-Line Tools: Download and install the Android SDK command-line tools:
-   ```bash
-   mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools
-   cd ~/.buildozer/android/platform/android-sdk/cmdline-tools
-   wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-   unzip cmdline-tools.zip
-   mv cmdline-tools latest
-   ```
-10. Verify the Installation: Ensure the `sdkmanager` tool is available:
-   ```bash
-   ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --list
-   ```
-11. Set the Correct SDK Path: Update your buildozer.spec file to point to the correct Android SDK path:
-   ```plaintext
-   android.sdk_path = ~/.buildozer/android/platform/android-sdk
-   ```
-12. Accept SDK Licenses: Accept the Android SDK licenses to avoid further issues:
-   ```bash
-   ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
-   ```
-    This should resolve the issue with the missing `sdkmanager`.
-13. Retry the Buildozer commands:
-    ```bash
-    buildozer android clean
-    buildozer -v android debug --log-level 2 --debug > logs/buildozer.log
-    cp logs/buildozer.log logs/buildozer_log.txt
-    ```
 
 ### Install and Run the APK on Android
 1. Transfer the APK file to your Android device.
