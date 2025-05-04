@@ -39,8 +39,8 @@ version = 1.0.0
 # version.filename = %(source.dir)s/main.py
 
 # (list) Application requirements
-# comma separated e.g. requirements = sqlite3,python3crystax==3.6,kivy
-requirements = python3,kivy,pygame
+# comma separated e.g. requirements = hostpython3==3.10, sqlite3, python3crystax==3.6, kivy
+requirements = python3==3.10, kivy, pygame, setuptools
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -69,7 +69,7 @@ orientation = landscape
 # author = © Copyright Info
 
 # change the major version of python used by the app
-osx.python_version = 3
+#osx.python_version = 3
 
 # Kivy version to use
 #osx.kivy_version = 1.10.1
@@ -148,7 +148,7 @@ android.add_jars = /usr/share/java/jaxb-api.jar,/usr/share/java/jaxb-impl.jar,/u
 
 # (list) List of Java files to add to the android project (can be java or a
 # directory containing the files)
-#android.add_src =
+#android.add_src = /usr/include/python3.8
 
 # (list) Android AAR archives to add (currently works only with sdl2_gradle
 # bootstrap)

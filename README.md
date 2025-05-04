@@ -26,7 +26,25 @@ To run this game, you need to have Python installed.
 
 1. Clone the repository or download the project files.
 2. Navigate to the project directory.
-3. Install Python 3.8 ([steps](https://askubuntu.com/questions/1493434/how-to-install-python3-8-on-ubuntu-23-04)).
+3. Install Python 3.10:
+    ```bash
+    sudo apt update
+    sudo apt install python3.10 python3.10-dev
+    sudo apt-get install libportmidi-dev libfreetype6-dev libavformat-dev libswscale-dev libjpeg-dev libpng-dev librsync-dev
+
+    rm -rf venv
+    python3.10 -m venv venv
+    source venv/bin/activate
+
+    python3.10 -m pip install pygame --no-binary :all:
+    python3.10 -m pygame --version
+    pip install --upgrade pip setuptools
+    pip install wheel
+    pip install positional
+    pip install duplicity --no-cache-dir
+    pip install --upgrade -r requirements.txt
+    ```
+4. Or Install Python 3.8 ([steps](https://askubuntu.com/questions/1493434/how-to-install-python3-8-on-ubuntu-23-04)).
     ```bash
     sudo apt-get update
 
@@ -49,25 +67,19 @@ To run this game, you need to have Python installed.
     make -j$(nproc)
     sudo make install
     python3.8 --version
-    ```
-4. Create and activate a virtual environment:
-    ```bash
+
     python3.8 -m venv venv
     source venv/bin/activate  # On Linux/macOS
     venv\Scripts\activate     # On Windows
-    ```
-5. Install the required dependencies:
-    ```bash
     pip install --no-cache-dir -r requirements.txt
     ```
-6. Reset the best score (optional) - Open `best_score.txt` and set its content to `0`. Or run:
+5. Reset the best score (optional) - Open `best_score.txt` and set its content to `0`. Or run:
     ```bash
     echo 0 > best_score.txt
     ```
-7. Run the game using the following command:
+6. Run the game using the following command:
     ```bash
-    python3.8 main.py
-    # python3.8 -m main # as a module or standalone project
+    python3.10 main.py
     ```
 
 ## How to Build and Run the Game on Android
@@ -83,7 +95,8 @@ Follow these steps to package the game for Android using Buildozer:
 
     sudo apt install -y python3-pip python3-setuptools \
     python3-virtualenv openjdk-17-jdk unzip libstdc++6 libgtk2.0-0 \
-    libpangoxft-1.0-0 libjaxb-java cmake
+    libpangoxft-1.0-0 libjaxb-java cmake libsdl2-dev libsdl2-image-dev \
+    libsdl2-mixer-dev libsdl2-ttf-dev
     ```
 3. Initialize Buildozer (if not already done):
     ```bash
@@ -95,9 +108,10 @@ Follow these steps to package the game for Android using Buildozer:
     android.sdk_path = /home/<username>/Desktop/code/copilot/snake_game/.buildozer/android/platform/android-sdk
     android.ndk_path = /home/<username>/android-ndk-r25b
     ```
-6. (Optional) After changing `buildozer.spec`, you can do a complete appclean:
+6. (Optional) After changing `buildozer.spec`, you can do a complete `appclean` but `android clean` is sufficient:
     ```bash
     buildozer appclean
+    buildozer android clean
     ```
 7. (In a separate terminal) Install Android Command-Line Tools: Download and install the Android SDK command-line tools:
     ```bash
@@ -105,6 +119,9 @@ Follow these steps to package the game for Android using Buildozer:
     cd .buildozer/android/platform/android-sdk/cmdline-tools/latest/
     wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
     unzip cmdline-tools.zip
+    
+    rsync -av --delete cmdline-tools/ .
+    
     mv cmdline-tools/* .
     rmdir cmdline-tools
     ```
@@ -114,11 +131,13 @@ Follow these steps to package the game for Android using Buildozer:
     export ANDROIDNDK=$HOME/android-ndk-r25b
     export ANDROID_HOME=$(pwd)/.buildozer/android/platform/android-sdk
     export ANDROID_SDK_ROOT=$(pwd)/.buildozer/android/platform/android-sdk
+    export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
 
     echo $ANDROIDSDK
     echo $ANDROIDNDK
     echo $ANDROID_HOME
     echo $ANDROID_SDK_ROOT
+    echo $PATH
     ```
 9. Persist the environment variables:
     ```bash
@@ -160,7 +179,7 @@ Follow these steps to package the game for Android using Buildozer:
     ```bash
     rm -f .buildozer/android/platform/android-sdk/tools/bin/sdkmanager
     mkdir -p .buildozer/android/platform/android-sdk/tools/bin
-    ln -s .buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/ .buildozer/android/platform/android-sdk/tools/bin/sdkmanager
+    ln -s ../../cmdline-tools/latest/bin/sdkmanager .buildozer/android/platform/android-sdk/tools/bin/sdkmanager
 
     .buildozer/android/platform/android-sdk/tools/bin/sdkmanager --list
     ```
@@ -181,6 +200,11 @@ Follow these steps to package the game for Android using Buildozer:
     cp logs/android_apk.log logs/android_apk_log.txt
     ```
     This captures 10 lines before and after each Application Not Responding (ANR) error.
+19. To investigate the APK:
+    ```bash
+    apktool d your_app.apk
+    ```
+    
 
 ### Using JDK 17 for Buildozer
 
@@ -223,5 +247,3 @@ Buildozer works well with JDK 17. Follow these steps to configure JDK 17:
 - Best score saved between sessions.
 
 Enjoy playing the classic Snake game!
-
-apktool d your_app.apk
