@@ -39,8 +39,8 @@ version = 1.0.0
 # version.filename = %(source.dir)s/main.py
 
 # (list) Application requirements
-# comma separated e.g. requirements = hostpython3==3.10, sqlite3, python3crystax==3.6, kivy
-requirements = python3==3.10, kivy, pygame, setuptools
+# comma separated e.g. requirements = hostpython3==3.11, sqlite3, python3crystax==3.6, kivy
+requirements = python3,kivy,setuptools
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -66,13 +66,13 @@ orientation = landscape
 #
 
 #
-# author = © Copyright Info
+author = Elijah Rwothoromo © Copyright Info
 
 # change the major version of python used by the app
-#osx.python_version = 3
+osx.python_version = 3
 
 # Kivy version to use
-#osx.kivy_version = 1.10.1
+#osx.kivy_version = 2.1.0
 
 #
 # Android specific
@@ -109,7 +109,7 @@ android.ndk = 25b
 #android.private_storage = True
 
 # (str) Android NDK directory (if empty, it will be automatically downloaded.)
-android.ndk_path = /home/rwothoromo/android-ndk-r25b
+#android.ndk_path = %(HOME)s/android-ndk-r25b
 
 # (str) Android NDK flags
 android.ndk_flags = -Wno-macro-redefined
@@ -118,7 +118,7 @@ android.ndk_flags = -Wno-macro-redefined
 android.ndk_api = 23
 
 # (str) Android SDK directory (if empty, it will be automatically downloaded.)
-android.sdk_path = /home/rwothoromo/Desktop/code/copilot/snake_game/.buildozer/android/platform/android-sdk
+#android.sdk_path = %(HOME)s/Desktop/code/copilot/snake_game/.buildozer/android/platform/android-sdk
 
 # (str) ANT directory (if empty, it will be automatically downloaded.)
 #android.ant_path =
@@ -144,7 +144,7 @@ android.sdk_path = /home/rwothoromo/Desktop/code/copilot/snake_game/.buildozer/a
 # their classes. Don't add jars that you do not need, since extra jars can slow
 # down the build process. Allows wildcards matching, for example:
 # OUYA-ODK/libs/*.jar
-android.add_jars = /usr/share/java/jaxb-api.jar,/usr/share/java/jaxb-impl.jar,/usr/share/java/jaxb-core.jar
+#android.add_jars = /usr/share/java/jaxb-api.jar,/usr/share/java/jaxb-impl.jar,/usr/share/java/jaxb-core.jar
 
 # (list) List of Java files to add to the android project (can be java or a
 # directory containing the files)
@@ -208,7 +208,7 @@ android.add_jars = /usr/share/java/jaxb-api.jar,/usr/share/java/jaxb-impl.jar,/u
 #
 
 # (str) python-for-android git clone directory (if empty, it will be automatically cloned from github)
-p4a.source_dir = /home/rwothoromo/python-for-android
+#p4a.source_dir = %(HOME)s/python-for-android
 
 # (str) The directory in which python-for-android should look for your own build recipes (if any)
 #p4a.local_recipes =
@@ -247,10 +247,10 @@ log_level = 2
 warn_on_root = 1
 
 # (str) Path to build artifact storage, absolute or relative to spec file
-#build_dir = /home/rwothoromo/Desktop/code/copilot/snake_game/.buildozer
+#build_dir = %(HOME)s/Desktop/code/copilot/snake_game/.buildozer
 
 # (str) Path to build output (i.e. .apk, .ipa) storage
-#bin_dir = /home/rwothoromo/Desktop/code/copilot/snake_game/bin
+#bin_dir = %(HOME)s/Desktop/code/copilot/snake_game/bin
 
 #    -----------------------------------------------------------------------------
 #    List as sections

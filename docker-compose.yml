@@ -1,0 +1,26 @@
+services:
+  buildozer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: kivy-buildozer
+    container_name: kivy-buildozer
+    volumes:
+      - ./:/app
+      - buildozer_cache:/home/builduser/.buildozer
+    working_dir: /app
+    tty: true
+    stdin_open: true
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    networks:
+      - my_network  # Define a custom network if needed
+
+volumes:
+  buildozer_cache:  # Define the named volume for caching
+
+networks:
+  my_network: # Define the custom network

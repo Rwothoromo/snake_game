@@ -21,7 +21,6 @@ cliapp
 click
 cryptography
 Cython
-dbus-python
 defer
 dill
 distlib
@@ -29,7 +28,6 @@ distro
 distro-info
 dnspython
 docutils
-duplicity
 fasteners
 filelock
 filetype
@@ -85,13 +83,11 @@ pycairo
 pycodestyle
 pycparser
 pycups
-pygame
 Pygments
 PyJWT
 pylint
 pymacaroons
 PyNaCl
-pyOpenSSL
 pyparsing
 pyproject_hooks
 pyRFC3339
