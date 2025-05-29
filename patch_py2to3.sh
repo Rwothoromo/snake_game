@@ -8,21 +8,35 @@ set -e
 echo "==== STEP A: FIXING libffi LT_SYS_SYMBOL_USCORE MACRO ===="
 
 fix_libtool_uscore() {
-  ANDROID_PLAT="${HOME}/.buildozer/android/platform"
-  for ROOT in \
-      "$ANDROID_PLAT"/build-arm64-v8a_armeabi-v7a \
-      "$ANDROID_PLAT"/build-armeabi-v7a_arm64-v8a; do
-
-    find "$ROOT" -path "*/other_builds/libffi/*/configure.ac" \
-     | while read -r CFG; do
-        [ -f "$CFG" ] || continue
-        DIR=$(dirname "$CFG")
-        M4="$DIR/m4"
-        echo "🔧 Patching libffi in $DIR"
-        mkdir -p "$M4"
-
-        # 1) drop in the missing macro
-        cat > "$M4/libtool-symbol-uscore.m4" << 'EOF'
+  echo "Searching for libffi directories in /app/.buildozer"
+  
+  # Find all libffi directories
+  local libffi_dirs=$(find /app/.buildozer -name "libffi" -type d 2>/dev/null)
+  
+  if [ -z "$libffi_dirs" ]; then
+    echo "⚠️ No libffi directories found. Have you run buildozer android debug first?"
+    return 1
+  fi
+  
+  echo "Found libffi directories:"
+  echo "$libffi_dirs"
+  echo
+  
+  local patched=0
+  
+  # Process each libffi directory
+  echo "$libffi_dirs" | while read -r LIBFFI_DIR; do
+    if [ -f "$LIBFFI_DIR/configure.ac" ]; then
+      echo "🔧 Found configure.ac at $LIBFFI_DIR/configure.ac"
+      
+      # Apply the patch to this directory
+      M4="$LIBFFI_DIR/m4"
+      echo "Creating directory $M4"
+      mkdir -p "$M4"
+      
+      # Create the m4 macro file
+      echo "Creating m4 macro file"
+      cat > "$M4/libtool-symbol-uscore.m4" << 'EOF'
 # missing LT_SYS_SYMBOL_USCORE
 AC_DEFUN([LT_SYS_SYMBOL_USCORE],[
   AC_CACHE_CHECK([for underscore on global symbols],
@@ -35,30 +49,47 @@ AC_DEFUN([LT_SYS_SYMBOL_USCORE],[
 ])
 EOF
 
-        # 2) patch configure.ac: allow the macro & add m4 dir
-        awk 'NR==1{print;next}
-             /^AC_INIT/{
-               print
-               print "m4_pattern_allow([LT_SYS_SYMBOL_USCORE])"
-               print "AC_CONFIG_MACRO_DIRS([m4])"
-               next
-             }
-             {print}' \
-          "$CFG" > "$CFG.patched"
-        mv "$CFG.patched" "$CFG"
+      # Patch configure.ac
+      echo "Patching configure.ac"
+      awk 'NR==1{print;next}
+           /^AC_INIT/{
+             print
+             print "m4_pattern_allow([LT_SYS_SYMBOL_USCORE])"
+             print "AC_CONFIG_MACRO_DIRS([m4])"
+             next
+           }
+           {print}' \
+        "$LIBFFI_DIR/configure.ac" > "$LIBFFI_DIR/configure.ac.patched"
+      mv "$LIBFFI_DIR/configure.ac.patched" "$LIBFFI_DIR/configure.ac"
 
-        # 3) rerun autoreconf so libffi picks it up
-        pushd "$DIR" >/dev/null
-          autoreconf -vfi
-        popd >/dev/null
-
-        echo "  ✅ patched $CFG"
-    done
+      # Run autoreconf
+      echo "Running autoreconf in $LIBFFI_DIR"
+      (cd "$LIBFFI_DIR" && autoreconf -vfi)
+      
+      echo "✅ patched $LIBFFI_DIR/configure.ac"
+      patched=$((patched + 1))
+    fi
   done
+  
+  if [ $patched -eq 0 ]; then
+    echo "⚠️ Found libffi directories but none had configure.ac to patch"
+    return 1
+  fi
+  
+  echo "✅ Successfully patched $patched libffi directories"
+  return 0
 }
 
+# Temporarily disable exit-on-error for this function call
+set +e
 fix_libtool_uscore
+libffi_result=$?
+set -e
 
+# If libffi patching failed, just show a warning but continue
+if [ $libffi_result -ne 0 ]; then
+  echo "⚠️ WARNING: libffi patching was skipped or failed, but continuing with Python 2-to-3 patching..."
+fi
 
 echo
 echo "==== STEP B: PATCHING PYTHON-2 → PYTHON-3 ISSUES IN CYTHON FILES ===="
@@ -98,13 +129,14 @@ patch_cython_directory() {
 }
 
 echo "▶️  Patching pyjnius…"
-find ~/.buildozer -path '*/build/other_builds/pyjnius-*' -type d \
+find "${APP_DIR}/.buildozer" -path '*/build/other_builds/pyjnius-*' -type d \
   | while read D; do patch_cython_directory "$D"; done
 
 echo "▶️  Patching kivy…"
-find ~/.buildozer -path '*/build/other_builds/kivy-*' -type d \
+find "${APP_DIR}/.buildozer" -path '*/build/other_builds/kivy-*' -type d \
   | while read D; do patch_cython_directory "$D"; done
 
 echo
 echo "==== ALL PATCHES COMPLETE ===="
-echo "Now run: buildozer -v android debug --log-level 2"
+echo "Now run: buildozer -v android debug --log-level 2 --debug 2>&1 | tee logs/buildozer.log"
+echo

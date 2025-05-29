@@ -3,11 +3,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    dns:
+      - 8.8.8.8
     image: kivy-buildozer
     container_name: kivy-buildozer
     volumes:
       - ./:/app
-      - buildozer_cache:/home/builduser/.buildozer
+      - .:/home/builduser/app
+      - buildozer_cache:/home/builduser/app/.buildozer
     working_dir: /app
     tty: true
     stdin_open: true

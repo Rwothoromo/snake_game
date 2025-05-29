@@ -1,41 +1,43 @@
 # Snake Game in Python
 
-This is a classic Snake 🐍 Game 🎮 implemented in Python using the Pygame and Kivy libraries. GitHub Copilot was also used. The objective of the game is to control the snake to eat food and grow in length while avoiding collisions with the walls and itself.
+A classic Snake 🐍 Game 🎮 implemented in Python using Pygame and Kivy. GitHub Copilot assisted in development. Guide the snake to eat food, grow longer, and avoid collisions with walls or itself.
 
 ## Project Structure
 
 ```
 snake_game
 ├── src
-│   ├── snake.py        # Contains the Snake class
-│   ├── food.py         # Contains the Food class
-│   └── game.py         # Contains the Pygame-based Game class (optional)
-├── main.py             # Entry point of the game (Kivy-based implementation)
-├── requirements.txt    # Lists the dependencies
-├── buildozer.spec      # Config file for building the APK (Android Package Kit or Android Application Package)
-├── Dockerfile          # Dockerfile for building Android APKs
-├── docker-compose.yml  # Compose file for Docker workflow
-├── .gitignore          # Specifies files and directories to ignore in Git
-├── best_score.txt      # Stores the best score
-└── README.md           # Documentation for the project
+│   ├── snake.py        # Snake class
+│   ├── food.py         # Food class
+│   └── game.py         # Pygame-based Game class (optional)
+├── main.py             # Entry point (Kivy-based)
+├── requirements.txt    # Python dependencies
+├── buildozer.spec      # Buildozer config for APK builds
+├── Dockerfile          # Dockerfile for Android APK builds
+├── docker-compose.yml  # Docker Compose workflow
+├── .gitignore          # Git ignore rules
+├── best_score.txt      # Stores best score
+└── README.md           # Project documentation
 ```
 
 ---
 
-## How to Run the Game on Desktop (Python)
+## Running the Game on Desktop
 
-1. **Clone the repository or download the project files.**
-
-2. **Navigate to the project directory.**
-
-3. **Create and activate a virtual environment:**
+1. **Clone the repository:**
     ```bash
-    python3 -m venv venv
-    source venv/bin/activate  # On Linux/macOS
-    # venv\Scripts\activate   # On Windows
+    git clone <repo-url>
+    cd snake_game
     ```
 
-4. **Install dependencies:**
+2. **Set up a virtual environment:**
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate  # Linux/macOS
+    # venv\Scripts\activate   # Windows
+    ```
+
+3. **Install dependencies:**
     ```bash
     pip install --upgrade pip
     pip install -r requirements.txt
@@ -43,96 +45,113 @@ snake_game
     pip install --upgrade python-for-android
     ```
 
-5. **(Optional) Reset the best score:**
+4. **(Optional) Reset best score:**
     ```bash
     echo 0 > best_score.txt
     ```
 
-6. **Run the game:**
+5. **Run the game:**
     ```bash
     python3 main.py
     ```
 
 ---
 
-## How to Build and Run the Game on Android (via Docker)
+## Building and Running on Android (with Docker)
 
 ### Prerequisites
 
-- [Docker Desktop](https://www.docker.com/products/docker-desktop) installed on your system.
+- [Docker Desktop](https://www.docker.com/products/docker-desktop) installed
 
 ### Steps
 
-1. **Clone the repository and navigate to the project directory.**
-
-2. **Build or Re-Build the Docker image:**
-    ```bash
-    docker-compose build
-    ```
-    Or, if you prefer not to use Compose:
-    ```bash
-    docker build -t kivy-buildozer .
-    ```
-    Or, without reusing cache:
-    ```bash
-    docker build --no-cache -t kivy-buildozer .
-    ```
-
-    **Tip:** To clean up any orphaned containers from previous runs, you can run:
+1. **Clone the repository, enter the directory and remove orphan containers.**  
+    This ensures a clean environment by deleting unused Docker resources that might interfere with the build process.
     ```bash
     docker-compose down --remove-orphans
     ```
 
-3. **Start a shell in the Docker container (as a non-root user):**
+2. **Build and start the Docker container:**
     ```bash
+    docker-compose build
     docker-compose run buildozer bash
     ```
+    
     Or, without Compose:
     ```bash
-    docker run --rm -it -v "$PWD":/app kivy-buildozer bash
+    docker build -t kivy-buildozer .
+    docker run --dns 8.8.8.8 --rm -it -v "$PWD":/home/builduser/app kivy-buildozer bash
     ```
+    
+    **Tip:** To avoid cache, add `--no-cache`.
 
-4. **Inside the Docker container, build the APK:**
+    **Tip:** To clean Buildozer state: `buildozer android clean`.
 
-    First, add the local bin directory to your PATH (to avoid missing script warnings):
+3. **Build your APK inside the container:**
     ```bash
-    export PATH="$PATH:/home/builduser/.local/bin"
+    # First create all needed directories and fix permissions
+    sudo mkdir -p ${APP_DIR}/.buildozer # For project-specific files
+    sudo mkdir -p ${HOME}/.buildozer  # Global for shared config
+    sudo mkdir -p ${HOME}/.android
+    sudo chown -R builduser:builduser ${APP_DIR}/.buildozer
+    sudo chown -R builduser:builduser ${HOME}/.buildozer
+    sudo chown -R builduser:builduser ${HOME}/.android  
+
+    # Set Google DNS (needs sudo)
+    echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf > /dev/null
+   
+    # First build attempt (will fail but creates directories)
+    buildozer android debug || true
+   
+    # Apply patches
+    chmod +x patch_py2to3.sh
+    ./patch_py2to3.sh
+
+    # Final build with logging. This captures all output (stdout and stderr use '2>&1'), shows it live (use '| tee' instead of '>'), and saves it to 'logs/buildozer.log'. With '--log-level' (0 - minimal, 1 - normal, 2 - verbose).
+    buildozer -v android debug --log-level 2 --debug 2>&1 | tee logs/buildozer.log
     ```
+   
+    The APK will be generated in the `bin/` directory.
 
-    You can do a buildozer clean up if need be:
-    ```bash
-    buildozer android clean
-    ```
-
-    The generated APK will be in the `bin/` directory on your host machine.
-
-5. **(Optional) Deploy and run the debug app directly on a plugged-in phone:**
+4. **(Optional) Deploy and run on a connected Android device:**
     ```bash
     buildozer android debug deploy run logcat > logs/buildozer.log
     cp logs/buildozer.log logs/buildozer_log.txt
     ```
 
-6. **Transfer the APK to your Android device and install it.**
+5. **In case you need to manually download the Android platform-tools:**
+    ```bash
+    # Manually download and install platform-tools instead of relying on sdkmanager. Create platform-tools directory
+    mkdir -p ${ANDROID_SDK_ROOT}/platform-tools
+
+    # Download and install platform-tools directly
+    cd ${ANDROID_SDK_ROOT}
+    wget -q https://dl.google.com/android/repository/platform-tools_r33.0.3-linux.zip -O platform-tools.zip
+    unzip -q platform-tools.zip
+    rm platform-tools.zip
+
+    # Return to the app directory
+    cd ~/app
+    ```
 
 ---
 
 ## Notes
 
-- **You do not need to install Buildozer or Android SDK/NDK on your host machine.** The Docker image handles all dependencies.
-- **The Docker image runs as a non-root user (`builduser`) to avoid permission issues.**
-- **If you want to customize the build, edit `buildozer.spec` before building.**
-- **For advanced Android SDK/NDK configuration, see the Buildozer documentation.**
+- **No need to install Buildozer or Android SDK/NDK on your host.** Docker handles all dependencies.
+- **Docker runs as a non-root user (`builduser`) to avoid permission issues.**
+- **Customize builds by editing `buildozer.spec`.**
+- **For advanced Android configuration, see Buildozer docs.**
 
 ---
 
 ## Features
 
-- Control the snake using touch gestures (on Android) or arrow keys (on desktop).
-- Eat food to grow the snake.
-- The game ends if the snake collides with the walls or itself.
-- Adjustable speed and boundary modes (wrap or stay within boundaries).
-- Playable on both desktop and Android devices.
-- Score tracking based on the number of food items eaten.
-- Best score saved between sessions.
+- Touch controls (Android) and arrow keys (desktop)
+- Eat food to grow the snake
+- Game over on collision with walls or self
+- Adjustable speed and boundary modes (wrap or bounded)
+- Playable on desktop and Android
+- Score and best score tracking (saved between sessions)
 
 Enjoy playing the classic Snake game!

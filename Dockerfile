@@ -3,8 +3,10 @@ FROM python:3.11-slim-bookworm
 # Set environment variables for SDK/NDK if you're managing them manually
 # Otherwise, Buildozer will download them to ~/.buildozer/android/platform/
 ENV HOME=/home/builduser
-ENV ANDROID_SDK_ROOT=${HOME}/.buildozer/android/platform/android-sdk
-ENV ANDROID_NDK_HOME=${HOME}/.buildozer/android/platform/android-ndk-r25b
+ENV APP_DIR=${HOME}/app
+ENV ANDROID_PLAT=${APP_DIR}/.buildozer/android/platform
+ENV ANDROID_SDK_ROOT=${ANDROID_PLAT}/android-sdk
+ENV ANDROID_NDK_HOME=${ANDROID_PLAT}/android-ndk-r25b
 
 # Install dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -60,15 +62,15 @@ RUN --mount=type=cache,target=/root/.cache/pip pip install --upgrade pip setupto
 RUN curl -sS https://www.google.com > /dev/null || exit 1
 
 # Download and install Android SDK command-line tools
-RUN mkdir -p ${ANDROID_SDK_ROOT}/cmdline-tools/latest && \
-    wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O /tmp/cmdline-tools.zip && \
-    unzip -q /tmp/cmdline-tools.zip -d /tmp/cmdline-tools && \
-    mv /tmp/cmdline-tools/cmdline-tools/* ${ANDROID_SDK_ROOT}/cmdline-tools/latest/ && \
-    rm /tmp/cmdline-tools.zip
+RUN mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools" && \
+    cd "$ANDROID_SDK_ROOT/cmdline-tools" && \
+    wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip && \
+    unzip -q tools.zip && rm tools.zip && \
+    mv cmdline-tools latest
 
 # Make sdkmanager available at the legacy path, satisfying python-for-android
 RUN mkdir -p ${ANDROID_SDK_ROOT}/tools/bin && \
-    ln -s ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager
+    ln -sf ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager
 
 # Add SDK tools to PATH
 ENV PATH="${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:${ANDROID_SDK_ROOT}/platform-tools:${PATH}"
@@ -76,8 +78,8 @@ ENV PATH="${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:${ANDROID_SDK_ROOT}/platf
 # Accept Android SDK licenses (essential for automated builds)
 RUN yes | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --sdk_root=${ANDROID_SDK_ROOT} --licenses || true
 
-# Install Android API 33 (and potentially other necessary platforms/build-tools)
-RUN ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --sdk_root=${ANDROID_SDK_ROOT} "platforms;android-33" "build-tools;33.0.2" "platform-tools"
+# Install platform-tools and build-tools
+RUN yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
 # Download and extract Android NDK
 RUN wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O /tmp/ndk.zip && \
@@ -88,27 +90,43 @@ RUN wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip 
 ## 1) Create a non-root user
 RUN useradd -m builduser
 
+# Add builduser to sudoers with passwordless sudo (MOVE THIS HERE)
+RUN apt-get update && apt-get install -y sudo && \
+    echo "builduser ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/builduser && \
+    chmod 0440 /etc/sudoers.d/builduser
+
 ## 2) Copy app files & pre-create logs (as root)
-WORKDIR ${HOME}/app
-COPY . ${HOME}/app
-RUN mkdir -p logs \
- && chown -R builduser:builduser ${HOME}/app
+WORKDIR ${APP_DIR}
+COPY . ${APP_DIR}
 
-## 3) Switch to the non-root user for the rest
+## 3) Create necessary directories and set permissions
+#   chown ensures the non-root user actually owns the files and directories, which is what pip and buildozer expect.
+#   chmod 777 is less secure and sometimes not enough if the user doesn't own the files.
+RUN mkdir -p ${HOME}/.local \
+    && mkdir -p ${APP_DIR}/.buildozer/cache \
+    && mkdir -p ${APP_DIR}/logs \
+    && chown -R builduser:builduser ${HOME}/.local \
+    && chown -R builduser:builduser ${APP_DIR}/.buildozer \
+    && chown -R builduser:builduser ${APP_DIR}/logs \
+    && chown -R builduser:builduser ${APP_DIR}
+
+## 4) Switch to the non-root user for the rest
 USER builduser
-WORKDIR ${HOME}/app
+WORKDIR ${APP_DIR}
 
-RUN mkdir -p ${HOME}/.local && chown -R builduser:builduser ${HOME}/.local
+ENV PATH="${HOME}/.local/bin:${PATH}"
 
-# install requirements…
+# Install dependencies in requirements
 RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements.txt
 
-# bring in your patch
+# Bring in the Python 2 to 3 patch
 COPY --chown=builduser:builduser patch_py2to3.sh .
 
-# initial build / patch / rebuild
-RUN chmod +x patch_py2to3.sh \
- && buildozer android debug || true \
- && ./patch_py2to3.sh \
- && buildozer -v android debug --log‐level 2 --debug 2>&1 \
-      | tee logs/buildozer.log
+# Make patch script executable
+RUN chmod +x patch_py2to3.sh 
+
+# Create logs directory (buildozer needs this)
+RUN mkdir -p logs
+
+# Default command to build APK when container starts
+# CMD ["buildozer", "-v", "android", "debug"]
