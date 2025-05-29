@@ -51,6 +51,9 @@ EOF
 
       # Patch configure.ac
       echo "Patching configure.ac"
+      # Patch configure.ac to allow the macro
+      sed -i '1s/^/m4_pattern_allow([LT_SYS_SYMBOL_USCORE])\n/' configure.ac
+
       awk 'NR==1{print;next}
            /^AC_INIT/{
              print
@@ -68,6 +71,8 @@ EOF
       
       echo "✅ patched $LIBFFI_DIR/configure.ac"
       patched=$((patched + 1))
+
+      ls -la $ANDROID_PLAT/build-arm64-v8a_armeabi-v7a/build/other_builds/libffi/armeabi-v7a__ndk_target_23/libffi/m4/
     fi
   done
   
@@ -113,8 +118,19 @@ patch_cython_directory() {
     sed -i 's/isinstance(\([^,]*\), *\(([^)]*), *long\))/isinstance(\1, (\2, int))/g' "$F"
     sed -i 's/isinstance(\([^,]*\), *\(long, *([^)]*)\))/isinstance(\1, (int, \2))/g' "$F"
     # 3) jnius_conversion.pxi dict key long:'J'
-    [[ "$F" == *jnius_conversion.pxi ]] \
-      && sed -i "s/long: 'J'/int: 'J'  # patched/g" "$F"
+    if [[ "$F" == *jnius_conversion.pxi ]]; then
+      # Fix with comma - ensure comma stays OUTSIDE the comment
+      sed -i "s/long: 'J',/int: 'J',  # patched/g" "$F"
+      
+      # Fix without comma - don't add a trailing comma in this case
+      sed -i "s/long: 'J'$/int: 'J'  # patched/g" "$F"
+      
+      # Extra safety check - fix any incorrect patching that might have occurred
+      sed -i "s/int: 'J'  # patched,/int: 'J',  # patched/g" "$F"
+    fi
+    # 4. Find and fix Kivy weakproxy.pyx
+    find ${APP_DIR}/.buildozer -name "weakproxy.pyx" -exec sed -i 's/def __long__(self):/def __index__(self):/' {} \;
+    find ${APP_DIR}/.buildozer -name "weakproxy.pyx" -exec sed -i 's/return long(self.__ref__())/return int(self.__ref__())/' {} \;
 
     local newsum=$(md5sum "$F" | cut -d' ' -f1)
     if [ "$oldsum" != "$newsum" ]; then
@@ -138,5 +154,5 @@ find "${APP_DIR}/.buildozer" -path '*/build/other_builds/kivy-*' -type d \
 
 echo
 echo "==== ALL PATCHES COMPLETE ===="
-echo "Now run: buildozer -v android debug --log-level 2 --debug 2>&1 | tee logs/buildozer.log"
+echo "Now run: buildozer -v android debug --log-level 0 --debug 2>&1 | tee logs/buildozer.log"
 echo

@@ -8,10 +8,9 @@ services:
     image: kivy-buildozer
     container_name: kivy-buildozer
     volumes:
-      - ./:/app
       - .:/home/builduser/app
       - buildozer_cache:/home/builduser/app/.buildozer
-    working_dir: /app
+    working_dir: /home/builduser/app
     tty: true
     stdin_open: true
     deploy:

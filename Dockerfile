@@ -1,4 +1,4 @@
-FROM python:3.11-slim-bookworm
+FROM python:3.8-slim-bookworm
 
 # Set environment variables for SDK/NDK if you're managing them manually
 # Otherwise, Buildozer will download them to ~/.buildozer/android/platform/
@@ -34,6 +34,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libtool-bin \
     locales \
     m4 \
+    nano \
     openjdk-17-jdk \
     patch \
     pkg-config \
@@ -127,6 +128,3 @@ RUN chmod +x patch_py2to3.sh
 
 # Create logs directory (buildozer needs this)
 RUN mkdir -p logs
-
-# Default command to build APK when container starts
-# CMD ["buildozer", "-v", "android", "debug"]

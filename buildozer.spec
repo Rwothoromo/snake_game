@@ -40,7 +40,7 @@ version = 1.0.0
 
 # (list) Application requirements
 # comma separated e.g. requirements = hostpython3==3.11, sqlite3, python3crystax==3.6, kivy
-requirements = python3,kivy,setuptools
+requirements = python3==3.8.16,kivy,setuptools
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -93,8 +93,8 @@ fullscreen = 0
 android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_MEDIA_IMAGES, READ_EXTERNAL_STORAGE
 
 # (int) Android API to use
-# see https://developer.android.com/distribute/best-practices/develop/target-sdk
-android.api = 33
+# see https://developer.android.com/distribute/best-practices/develop/target-sdk. Previously used 33.
+android.api = 30
 
 # (int) Minimum API required
 android.minapi = 21
@@ -156,7 +156,9 @@ android.ndk_api = 23
 
 # (list) Gradle dependencies to add (currently works only with sdl2_gradle
 # bootstrap)
-#android.gradle_dependencies =
+# Faster Gradle builds
+android.gradle_dependencies = 
+android.gradle_use_cached_dependencies = True
 
 # (list) Java classes to add as activities to the manifest.
 #android.add_activites = com.example.ExampleActivity
