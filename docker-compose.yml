@@ -16,8 +16,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: 512M
+          cpus: '4'
+          memory: 8GB
     networks:
       - my_network  # Define a custom network if needed
 

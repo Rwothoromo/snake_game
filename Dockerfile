@@ -4,7 +4,9 @@ FROM python:3.8-slim-bookworm
 # Otherwise, Buildozer will download them to ~/.buildozer/android/platform/
 ENV HOME=/home/builduser
 ENV APP_DIR=${HOME}/app
+ENV GLOBAL_ANDROID_PLAT=${HOME}/.buildozer/android/platform
 ENV ANDROID_PLAT=${APP_DIR}/.buildozer/android/platform
+ENV GLOBAL_ANDROID_SDK_ROOT=${GLOBAL_ANDROID_PLAT}/android-sdk
 ENV ANDROID_SDK_ROOT=${ANDROID_PLAT}/android-sdk
 ENV ANDROID_NDK_HOME=${ANDROID_PLAT}/android-ndk-r25b
 
@@ -80,8 +82,19 @@ ENV PATH="${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:${ANDROID_SDK_ROOT}/platf
 # Accept Android SDK licenses (essential for automated builds)
 RUN yes | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --sdk_root=${ANDROID_SDK_ROOT} --licenses || true
 
-# Install platform-tools and build-tools
-RUN yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-30" "build-tools;30.0.3"
+# Install platform-tools and build-tools for both API 30 and 33
+RUN yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT \
+    "platform-tools" \
+    "platforms;android-30" \
+    "platforms;android-33" \
+    "build-tools;30.0.3" \
+    "build-tools;33.0.2" && \
+    ls -la $ANDROID_SDK_ROOT/build-tools
+
+# Create symbolic links to ensure build-tools are found in both paths
+RUN mkdir -p $GLOBAL_ANDROID_SDK_ROOT && \
+    ln -sf ${ANDROID_SDK_ROOT}/build-tools $GLOBAL_ANDROID_SDK_ROOT/build-tools && \
+    ln -sf ${ANDROID_SDK_ROOT}/platforms $GLOBAL_ANDROID_SDK_ROOT/platforms
 
 # Download and extract Android NDK
 RUN wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O /tmp/ndk.zip && \
@@ -102,15 +115,15 @@ WORKDIR ${APP_DIR}
 COPY . ${APP_DIR}
 
 ## 3) Create necessary directories and set permissions
-#   chown ensures the non-root user actually owns the files and directories, which is what pip and buildozer expect.
-#   chmod 777 is less secure and sometimes not enough if the user doesn't own the files.
+#   chown ensures the non-root user actually owns the files and directories.
 RUN mkdir -p ${HOME}/.local \
+    && mkdir -p ${HOME}/.android \
     && mkdir -p ${APP_DIR}/.buildozer/cache \
     && mkdir -p ${APP_DIR}/logs \
-    && chown -R builduser:builduser ${HOME}/.local \
+    && chown -R builduser:builduser ${HOME} \
     && chown -R builduser:builduser ${APP_DIR}/.buildozer \
     && chown -R builduser:builduser ${APP_DIR}/logs \
-    && chown -R builduser:builduser ${APP_DIR}
+    && chown -R builduser:builduser ${APP_DIR} # Ensure builduser owns the app directory content copied as root
 
 ## 4) Switch to the non-root user for the rest
 USER builduser

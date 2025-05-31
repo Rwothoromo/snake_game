@@ -94,7 +94,7 @@ android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_MEDIA_IMAGES, READ_
 
 # (int) Android API to use
 # see https://developer.android.com/distribute/best-practices/develop/target-sdk.
-android.api = 33
+android.api = 30
 
 # (int) Minimum API required
 android.minapi = 21
@@ -118,7 +118,7 @@ android.ndk_flags = -Wno-macro-redefined
 android.ndk_api = 23
 
 # (str) Android SDK directory (if empty, it will be automatically downloaded.)
-#android.sdk_path = %(HOME)s/Desktop/code/copilot/snake_game/.buildozer/android/platform/android-sdk
+#android.sdk_path = %(HOME)s/app/.buildozer/android/platform/android-sdk
 
 # (str) ANT directory (if empty, it will be automatically downloaded.)
 #android.ant_path =
@@ -126,7 +126,7 @@ android.ndk_api = 23
 # (bool) If True, then skip trying to update the Android sdk
 # This can be useful to avoid excess Internet downloads or save time
 # when an update is due and you just want to test/build your package
-#android.skip_update = False
+#android.skip_update = True
 
 # (str) Android entry point, default is ok for Kivy-based app
 #android.entrypoint = org.renpy.android.PythonActivity
@@ -219,7 +219,7 @@ android.gradle_use_cached_dependencies = True
 #p4a.hook =
 
 # (str) Bootstrap to use for android builds
-#p4a.bootstrap = sdl2
+p4a.bootstrap = sdl2
 
 # (int) port number to specify an explicit --port= p4a argument (eg for bootstrap flask)
 #p4a.port =

@@ -2,6 +2,12 @@
 
 echo "Fixing ctypes module in host Python..."
 
+# Ensure ANDROID_PLAT is set
+if [ -z "$ANDROID_PLAT" ]; then
+    echo "Error: ANDROID_PLAT environment variable is not set."
+    exit 2
+fi
+
 # Specifically target the three most important ctypes files
 CTYPES_FILES=(
     "${ANDROID_PLAT}/build-arm64-v8a_armeabi-v7a/build/other_builds/hostpython3/desktop/hostpython3/Lib/ctypes/__init__.py"

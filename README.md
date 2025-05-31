@@ -69,17 +69,19 @@ snake_game
 
 ### Steps
 
-1. **Clone the repository, enter the directory and remove orphan containers.**  
-    This ensures a clean environment by deleting unused Docker resources that might interfere with the build process.
+1.  **Clone the repository, enter the directory, remove orphan containers, and clear the Buildozer cache volume.**
+    This ensures a completely clean environment.
     ```bash
     docker-compose down --remove-orphans
+    docker volume rm snake_game_buildozer_cache || true 
+    # The volume name is typically <project_directory_name>_buildozer_cache
+    # If 'snake_game_buildozer_cache' does not work, check 'docker volume ls'
     ```
 
 2. **Build and start the Docker container:**
     Using the amazing buildozer for this. See [quickstart docs](https://buildozer.readthedocs.io/en/latest/quickstart.html).
     ```bash
-    docker-compose build
-    docker-compose run buildozer bash
+    docker-compose build && docker-compose run buildozer bash
     ```
 
     Or, without Compose:
@@ -102,52 +104,52 @@ snake_game
 
     **Tip:** To clean Buildozer state: `buildozer android clean`.
 
-3. **Build your APK inside the container:**
+3.  **Build your APK inside the container:**
     ```bash
-    # First create all needed directories and fix permissions
-    sudo mkdir -p ${APP_DIR}/.buildozer # For app-specific files
-    sudo mkdir -p ${HOME}/.buildozer  # For global shared config
-    sudo mkdir -p ${HOME}/.android
-    sudo mkdir -p ${HOME}/.kivy
-    sudo chown -R builduser:builduser ${APP_DIR}/.buildozer
-    sudo chown -R builduser:builduser ${HOME}/.buildozer
-    sudo chown -R builduser:builduser ${HOME}/.android
-    sudo chown -R builduser:builduser ${HOME}/.kivy
+    # Ensure all scripts are executable
+    sudo chmod +x fix_android_sdk.sh patch_py2to3.sh fix_ctypes.sh fix_py2to3.sh patch_jnius.sh
 
-    # Set Google DNS
-    echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf > /dev/null
+    # STEP 1: Ensure builduser owns the .buildozer directory and its contents
+    # This is crucial as Dockerfile might create some parts as root before user switch,
+    # or volume mounts might have different ownership.
+    sudo chown -R $(whoami):$(whoami) $HOME/.buildozer
+    sudo chown -R $(whoami):$(whoami) $APP_DIR/.buildozer # Mounted volume
 
-    # Clean previous build attempts
+    # STEP 2: Run the SDK verification and finalization script
+    # This ensures cmdline-tools are present, executable, licenses accepted, and API 30 tools installed.
+    ./fix_android_sdk.sh
+
+    # STEP 3: Explicitly set PATH for the current session to include SDK tools
+    # This makes sure the current shell session can find sdkmanager and other tools.
+    export PATH="${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:${ANDROID_SDK_ROOT}/platform-tools:${ANDROID_SDK_ROOT}/tools/bin:${HOME}/.local/bin:${PATH}"
+    
+    # STEP 4: Verify sdkmanager is found and executable IN THIS SHELL
+    echo "Verifying sdkmanager in current shell:"
+    which sdkmanager
+    ls -l $(which sdkmanager || echo "${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager")
+    sdkmanager --version || echo "SDK manager version check failed in current shell"
+
+    # STEP 5: Clean any previous Buildozer distribution state
+    # 'distclean' is more thorough than 'clean' for the distribution itself.
+    buildozer distclean
     buildozer android clean
-    rm -rf ~/.gradle
 
-    # First build attempt (will fail but creates directories)
-    buildozer android debug || true
+    # STEP 6: First Buildozer run (to download and extract recipes)
+    # This command will attempt to create the distribution.
+    # It should now find the SDK tools prepared by fix_android_sdk.sh.
+    # It is still expected to FAIL at a later stage (e.g., Cython compilation) 
+    # because Python patches have not been applied yet.
+    echo "Attempting initial Buildozer distribution creation (may fail at compilation)..."
+    nice -n -10 buildozer -v android debug --log-level 2 --debug || true
 
-    # Apply patches
-    chmod +x patch_py2to3.sh
-    ./patch_py2to3.sh
+    # STEP 7: Apply Python-specific patches
+    # These patches target files that should have been extracted by the previous Buildozer command.
+    echo "Applying Python-specific patches..."
+    ./patch_py2to3.sh && ./fix_ctypes.sh && ./fix_py2to3.sh && ./patch_jnius.sh
 
-    # Fix the ctypes module in the host Python
-    chmod +x fix_ctypes.sh
-    ./fix_ctypes.sh
-
-    # Find and patch all the Python 2 to 3 long type compatibility issues
-    chmod +x fix_py2to3.sh
-    ./fix_py2to3.sh
-
-    # Targeted fix for jnius_conversion.pxi
-    chmod +x patch_jnius.sh
-    ./patch_jnius.sh
-
-    # Gradle shenanigans
-    export GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx2048m"
-
-    # Final build with logging. This captures all output (stdout and stderr use '2>&1'), shows it live (use '| tee' instead of '>'), and saves it to 'logs/buildozer.log'. With '--log-level' (0 - minimal, 1 - normal, 2 - verbose).
-    buildozer -v android debug --log-level 2 --debug 2>&1 | tee logs/buildozer.log
-
-    # In a separate terminal, periodically check the last 50 lines 
-    tail -f -n 50 logs/buildozer.log | grep -E 'error|warning|compil|build|install|download'
+    # STEP 8: Final build attempt with logging
+    echo "Attempting final build..."
+    nice -n -10 buildozer -v android debug --log-level 2 --debug 2>&1 | tee logs/buildozer.log
     ```
 
     The APK will be generated in the `bin/` directory.
@@ -196,7 +198,7 @@ snake_game
     cd ${APP_DIR}
     ```
 
-- **Install API 33 platfrom and tools (for API 30, replace 33 with 30):**
+- **Install API 30 and 33 platfrom and tools:**
     ```bash
     # 1. Make sure you have the necessary directories
     mkdir -p ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin
@@ -205,15 +207,26 @@ snake_game
     # 2. Accept Android SDK licenses first
     yes | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --licenses
 
-    # 3. Install Android API 33 platform and tools
+    # 3. # Fix paths with symbolic links
+    mkdir -p ${GLOBAL_ANDROID_PLAT}
+    ln -sf ${ANDROID_SDK_ROOT} $GLOBAL_ANDROID_PLAT
+
+    # 4. Then verify the symbolic links work:
+    ls -la ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager
+    ls -la ${GLOBAL_ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager
+
+    # 5. Install Android API 30 and 33 platform and tools
     yes | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager \
         --sdk_root=${ANDROID_SDK_ROOT} \
-        "platform-tools" \
-        "platforms;android-33" \
-        "build-tools;33.0.3"
+            "platform-tools" \
+            "platforms;android-30" \
+            "build-tools;30.0.3" \
+            "platforms;android-33" \
+            "build-tools;33.0.2"
 
-    # 4. Verify the installation (you should see android-33/)
+    # 6. Verify the installation (you should see 30 and 33)
     ls -la ${ANDROID_SDK_ROOT}/platforms
+    ls -la ${ANDROID_SDK_ROOT}/build-tools
     ```
 
 - **In case you need to manually download the Android platform-tools:**
