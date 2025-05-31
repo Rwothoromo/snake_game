@@ -129,9 +129,17 @@ snake_game
     chmod +x patch_py2to3.sh
     ./patch_py2to3.sh
 
+    # Fix the ctypes module in the host Python
+    chmod +x fix_ctypes.sh
+    ./fix_ctypes.sh
+
     # Find and patch all the Python 2 to 3 long type compatibility issues
     chmod +x fix_py2to3.sh
     ./fix_py2to3.sh
+
+    # Targeted fix for jnius_conversion.pxi
+    chmod +x patch_jnius.sh
+    ./patch_jnius.sh
 
     # Gradle shenanigans
     export GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx2048m"

@@ -31,6 +31,9 @@ find ${APP_DIR}/.buildozer -name "configure.ac" -path "*libffi*" -exec sed -i '1
 
 # Create m4 directory where needed
 echo "6/6 Create m4 directory where needed ...wait"
-find ${APP_DIR}/.buildozer -path "*libffi*" -type d -exec mkdir -p {}/m4 \; 2>/dev/null || true
+find ${APP_DIR}/.buildozer -path "*libffi*" -type d ! -name m4 | while read dir; do
+    echo "Creating $dir/m4"
+    mkdir -p "$dir/m4" 2>/dev/null || true
+done
 
 echo "Patching complete!"
