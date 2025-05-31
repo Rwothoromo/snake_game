@@ -67,7 +67,8 @@ RUN mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools" && \
     cd "$ANDROID_SDK_ROOT/cmdline-tools" && \
     wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip && \
     unzip -q tools.zip && rm tools.zip && \
-    mv cmdline-tools latest
+    mv cmdline-tools latest && \
+    cd $APP_DIR
 
 # Make sdkmanager available at the legacy path, satisfying python-for-android
 RUN mkdir -p ${ANDROID_SDK_ROOT}/tools/bin && \
@@ -80,7 +81,7 @@ ENV PATH="${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:${ANDROID_SDK_ROOT}/platf
 RUN yes | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --sdk_root=${ANDROID_SDK_ROOT} --licenses || true
 
 # Install platform-tools and build-tools
-RUN yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+RUN yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-30" "build-tools;30.0.3"
 
 # Download and extract Android NDK
 RUN wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip -O /tmp/ndk.zip && \
@@ -119,12 +120,6 @@ ENV PATH="${HOME}/.local/bin:${PATH}"
 
 # Install dependencies in requirements
 RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements.txt
-
-# Bring in the Python 2 to 3 patch
-COPY --chown=builduser:builduser patch_py2to3.sh .
-
-# Make patch script executable
-RUN chmod +x patch_py2to3.sh 
 
 # Create logs directory (buildozer needs this)
 RUN mkdir -p logs

@@ -81,7 +81,7 @@ snake_game
     docker-compose build
     docker-compose run buildozer bash
     ```
-    
+
     Or, without Compose:
     ```bash
     docker build -t kivy-buildozer .
@@ -91,10 +91,13 @@ snake_game
     -v "$PWD/requirements.txt":${APP_DIR}/requirements.txt \
     -v "$PWD/buildozer.spec":${APP_DIR}/buildozer.spec \
     -v "$PWD/patch_py2to3.sh":${APP_DIR}/patch_py2to3.sh \
+    -v "$PWD/fix_ctypes.sh":${APP_DIR}/fix_ctypes.sh \
+    -v "$PWD/fix_py2to3.sh":${APP_DIR}/fix_py2to3.sh \
+    -v "$PWD/patch_jnius.sh":${APP_DIR}/patch_jnius.sh \
     -v "$PWD/bin":${APP_DIR}/bin \
     kivy-buildozer bash
     ```
-    
+
     **Tip:** To avoid cache, add `--no-cache`.
 
     **Tip:** To clean Buildozer state: `buildozer android clean`.
@@ -111,20 +114,16 @@ snake_game
     sudo chown -R builduser:builduser ${HOME}/.android
     sudo chown -R builduser:builduser ${HOME}/.kivy
 
-    # Set Google DNS (needs sudo)
+    # Set Google DNS
     echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf > /dev/null
 
-    # Install required Android API level and build-tools
-    # mkdir -p ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin
-    # ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --sdk_root=${ANDROID_SDK_ROOT} "platforms;android-33" "build-tools;33.0.2"
-   
     # Clean previous build attempts
     buildozer android clean
     rm -rf ~/.gradle
 
     # First build attempt (will fail but creates directories)
     buildozer android debug || true
-   
+
     # Apply patches
     chmod +x patch_py2to3.sh
     ./patch_py2to3.sh
@@ -150,7 +149,7 @@ snake_game
     # In a separate terminal, periodically check the last 50 lines 
     tail -f -n 50 logs/buildozer.log | grep -E 'error|warning|compil|build|install|download'
     ```
-   
+
     The APK will be generated in the `bin/` directory.
 
 4. **(Optional) Deploy and run on a connected Android device:**
@@ -162,7 +161,7 @@ snake_game
 ### Quick APK Build (Docker One-Liner)
     For those who just want the APK without all the detailed steps:
     ```bash
-    docker-compose build && docker-compose run buildozer bash -c "buildozer android clean && buildozer android debug || true && ./patch_py2to3.sh && buildozer -v android debug"
+    docker-compose build && docker-compose run buildozer bash -c "buildozer android clean && buildozer android debug || true && ./patch_py2to3.sh && ./fix_ctypes.sh && ./fix_py2to3.sh && ./patch_jnius.sh && buildozer -v android debug"
     ```
 
 ---
@@ -170,8 +169,8 @@ snake_game
 ## Troubleshooting
 
 ### Common Desktop Issues
-- **ModuleNotFoundError: No module named 'pygame'**: Make sure to install pygame explicitly with `pip install pygame`
-- **Display issues**: Verify your Python environment has proper display support
+- **ModuleNotFoundError: No module named 'pygame'**: Make sure to install pygame explicitly with `pip install pygame`.
+- **Display issues**: Verify your Python environment has proper display support.
 
 ### Common Android Build Issues
 - **To directly edit and fix pyjnius bugs:**
@@ -182,7 +181,7 @@ snake_game
     # Directly fix "long type doesn't exist in Python 3" by replacing it with int:
     find ${APP_DIR}/.buildozer -path '*pyjnius*' -name 'jnius_conversion.pxi' \
     -exec sed -i 's/isinstance(py_arg, (int, long))/isinstance(py_arg, int)/g' {} \;
-    
+
     # Find all Python files with 'long' references
     find ${APP_DIR}/.buildozer -name "*.py*" \
     -exec grep -l "long" {} \; 2>/dev/null
@@ -197,6 +196,26 @@ snake_game
     cd ${APP_DIR}
     ```
 
+- **Install API 33 platfrom and tools (for API 30, replace 33 with 30):**
+    ```bash
+    # 1. Make sure you have the necessary directories
+    mkdir -p ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin
+    cd ${APP_DIR}
+
+    # 2. Accept Android SDK licenses first
+    yes | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --licenses
+
+    # 3. Install Android API 33 platform and tools
+    yes | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager \
+        --sdk_root=${ANDROID_SDK_ROOT} \
+        "platform-tools" \
+        "platforms;android-33" \
+        "build-tools;33.0.3"
+
+    # 4. Verify the installation (you should see android-33/)
+    ls -la ${ANDROID_SDK_ROOT}/platforms
+    ```
+
 - **In case you need to manually download the Android platform-tools:**
     ```bash
     # Manually download and install platform-tools instead of relying on sdkmanager. Create platform-tools directory
@@ -204,12 +223,12 @@ snake_game
 
     # Download and install platform-tools directly
     cd ${ANDROID_SDK_ROOT}
-    wget -q https://dl.google.com/android/repository/platform-tools_r33.0.3-linux.zip -O platform-tools.zip
+    wget -q https://dl.google.com/android/repository/platform-tools_r30.0.3-linux.zip -O platform-tools.zip
     unzip -q platform-tools.zip
     rm platform-tools.zip
 
-    # Return to the app directory ${APP_DIR}$
-    cd ~/app
+    # Return to the app directory ${APP_DIR}
+    cd ${APP_DIR}
     ```
 
 ---

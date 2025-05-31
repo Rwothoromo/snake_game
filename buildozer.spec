@@ -93,8 +93,8 @@ fullscreen = 0
 android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE, READ_MEDIA_IMAGES, READ_EXTERNAL_STORAGE
 
 # (int) Android API to use
-# see https://developer.android.com/distribute/best-practices/develop/target-sdk. Previously used 33.
-android.api = 30
+# see https://developer.android.com/distribute/best-practices/develop/target-sdk.
+android.api = 33
 
 # (int) Minimum API required
 android.minapi = 21
