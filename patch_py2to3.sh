@@ -52,7 +52,7 @@ EOF
       # Patch configure.ac
       echo "Patching configure.ac"
       # Patch configure.ac to allow the macro
-      sed -i '1s/^/m4_pattern_allow([LT_SYS_SYMBOL_USCORE])\n/' configure.ac
+      sed -i '1s/^/m4_pattern_allow([LT_SYS_SYMBOL_USCORE])\nAC_CONFIG_MACRO_DIRS([m4])\n/' configure.ac
 
       awk 'NR==1{print;next}
            /^AC_INIT/{

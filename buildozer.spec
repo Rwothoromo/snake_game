@@ -17,7 +17,8 @@ package.domain = com.rwothoromo.game
 source.dir = .
 
 # (list) Source files to include (let empty to include all the files)
-source.include_exts = py,png,jpg,kv,atlas,ogg
+# source.include_exts = py,png,jpg,kv,atlas,ogg
+source.include_exts =
 
 # (list) List of inclusions using pattern matching
 source.include_patterns = data/*.png, sound/*.ogg
@@ -40,7 +41,7 @@ version = 1.0.0
 
 # (list) Application requirements
 # comma separated e.g. requirements = hostpython3==3.11, sqlite3, python3crystax==3.6, kivy
-requirements = python3==3.8.16,kivy,setuptools
+requirements = hostpython3==3.8.16,python3==3.8.16,kivy,setuptools
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -118,7 +119,10 @@ android.ndk_flags = -Wno-macro-redefined
 android.ndk_api = 23
 
 # (str) Android SDK directory (if empty, it will be automatically downloaded.)
-#android.sdk_path = %(HOME)s/app/.buildozer/android/platform/android-sdk
+android.sdk_path = /home/builduser/app/.buildozer/android/platform/android-sdk
+
+# Accept SDK license
+android.accept_sdk_license = True
 
 # (str) ANT directory (if empty, it will be automatically downloaded.)
 #android.ant_path =
@@ -213,10 +217,10 @@ android.gradle_use_cached_dependencies = True
 #p4a.source_dir = %(HOME)s/python-for-android
 
 # (str) The directory in which python-for-android should look for your own build recipes (if any)
-#p4a.local_recipes =
+p4a.local_recipes = ./recipes
 
 # (str) Filename to the hook for p4a
-#p4a.hook =
+p4a.hook = prebuild.py
 
 # (str) Bootstrap to use for android builds
 p4a.bootstrap = sdl2
@@ -249,10 +253,10 @@ log_level = 2
 warn_on_root = 1
 
 # (str) Path to build artifact storage, absolute or relative to spec file
-#build_dir = %(HOME)s/Desktop/code/copilot/snake_game/.buildozer
+#build_dir = /home/builduser/.buildozer
 
 # (str) Path to build output (i.e. .apk, .ipa) storage
-#bin_dir = %(HOME)s/Desktop/code/copilot/snake_game/bin
+#bin_dir = /home/builduser/bin
 
 #    -----------------------------------------------------------------------------
 #    List as sections
@@ -283,7 +287,7 @@ warn_on_root = 1
 #    and extend the excluded directories to remove the HD content.
 #
 #[app@demo]
-#title = My Application (demo)
+title = Snake Game
 #
 #[app:source.exclude_patterns@demo]
 #images/hd/*

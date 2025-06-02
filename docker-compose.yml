@@ -1,28 +1,36 @@
+version: '3.8'  # Specify the Compose file version
+
 services:
   buildozer:
     build:
       context: .
       dockerfile: Dockerfile
-    dns:
-      - 8.8.8.8
     image: kivy-buildozer
     container_name: kivy-buildozer
+    dns:
+      - 8.8.8.8
     volumes:
-      - .:/home/builduser/app
+      - .:/home/builduser/app:rw
       - buildozer_cache:/home/builduser/app/.buildozer
     working_dir: /home/builduser/app
     tty: true
     stdin_open: true
+    environment:
+      - PYTHONUNBUFFERED=1
+      - TZ=UTC
+    restart: unless-stopped
     deploy:
       resources:
         limits:
-          cpus: '4'
-          memory: 8GB
+          cpus: '4.0'
+          memory: 8G
     networks:
-      - my_network  # Define a custom network if needed
+      - my_network
 
 volumes:
-  buildozer_cache:  # Define the named volume for caching
+  buildozer_cache:
+    driver: local
 
 networks:
-  my_network: # Define the custom network
+  my_network:
+    driver: bridge

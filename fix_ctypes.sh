@@ -8,12 +8,12 @@ if [ -z "$ANDROID_PLAT" ]; then
     exit 2
 fi
 
-# Specifically target the three most important ctypes files
-CTYPES_FILES=(
-    "${ANDROID_PLAT}/build-arm64-v8a_armeabi-v7a/build/other_builds/hostpython3/desktop/hostpython3/Lib/ctypes/__init__.py"
-    "${ANDROID_PLAT}/build-arm64-v8a_armeabi-v7a/build/other_builds/python3/arm64-v8a__ndk_target_23/python3/Lib/ctypes/__init__.py"
-    "${ANDROID_PLAT}/build-arm64-v8a_armeabi-v7a/build/other_builds/python3/armeabi-v7a__ndk_target_23/python3/Lib/ctypes/__init__.py"
-)
+# Find all ctypes __init__.py files under ANDROID_PLAT
+mapfile -t CTYPES_FILES < <(find "$ANDROID_PLAT" -type f -path "*/ctypes/__init__.py")
+echo "Found ctypes files:"
+for f in "${CTYPES_FILES[@]}"; do
+    echo "  $f"
+done
 
 PATCHED_COUNT=0
 
