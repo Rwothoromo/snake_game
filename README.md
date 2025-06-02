@@ -106,11 +106,18 @@ done
 buildozer distclean
 buildozer android clean
 
-# Apply Python and pyjnius patches
-sudo ./patch_py2to3.sh && ./fix_ctypes.sh && ./fix_py2to3.sh && ./patch_jnius.sh
-
-# Final build (APK will be in bin/ - may fail, prepares sources)
+# First build attempt (downloads sources, builds libffi with custom recipe, 
+# extracts Kivy/Pyjnius etc. May fail on other unpatched Cython or succeed through libffi)
 buildozer -v android debug --log-level 2 --debug 2>&1 | tee logs/buildozer.log || true
+cp logs/buildozer.log logs/buildozer_log.txt
+
+# Apply Cython (Kivy/Pyjnius) and ctypes patches now that their sources are available
+sudo ./patch_py2to3.sh # This script now only handles Cython for Kivy/Pyjnius etc.
+./fix_ctypes.sh
+
+# Second build attempt (should use patched Kivy/Pyjnius; libffi should be good from 1st attempt)
+# If the first attempt fully succeeded, this might not be strictly necessary but is safe.
+buildozer -v android debug --log-level 2 --debug 2>&1 | tee -a logs/buildozer.log || true
 cp logs/buildozer.log logs/buildozer_log.txt
 ```
 
@@ -124,7 +131,7 @@ cp logs/buildozer.log logs/buildozer_log.txt
 #### Quick APK Build (One-Liner)
 
 ```bash
-docker-compose build && docker-compose run buildozer bash -c "buildozer android clean && buildozer android debug || true && ./patch_py2to3.sh && ./fix_ctypes.sh && ./fix_py2to3.sh && ./patch_jnius.sh && buildozer -v android debug"
+docker-compose build && docker-compose run buildozer bash -c "buildozer android clean && buildozer android debug --log-level 2 || true && sudo ./patch_py2to3.sh && ./fix_ctypes.sh && buildozer -v android debug --log-level 2"
 ```
 
 ---
@@ -152,6 +159,8 @@ docker-compose build && docker-compose run buildozer bash -c "buildozer android 
             "platform-tools" "platforms;android-30" "build-tools;30.0.3" \
             "platforms;android-33" "build-tools;33.0.2"
     ```
+- **Script fixes:**
+    Visit [GitIngest](https://gitingest.com/) and upload the git repo, download its `*.txt` version, upload that to [ai.dev](aistudio.google.com) and seek answers!
 
 ---
 
