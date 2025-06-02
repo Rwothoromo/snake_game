@@ -111,6 +111,7 @@ sudo ./patch_py2to3.sh && ./fix_ctypes.sh && ./fix_py2to3.sh && ./patch_jnius.sh
 
 # Final build (APK will be in bin/ - may fail, prepares sources)
 buildozer -v android debug --log-level 2 --debug 2>&1 | tee logs/buildozer.log || true
+cp logs/buildozer.log logs/buildozer_log.txt
 ```
 
 **To deploy and run on a connected Android device:**
