@@ -47,8 +47,8 @@ patch_cython_directory() {
       fi
     fi
     # 4. Find and fix Kivy weakproxy.pyx
-    find ${APP_DIR}/.buildozer -name "weakproxy.pyx" -exec sed -i 's/def __long__(self):/def __index__(self):/' {} \;
-    find ${APP_DIR}/.buildozer -name "weakproxy.pyx" -exec sed -i 's/return long(self.__ref__())/return int(self.__ref__())/' {} \;
+    find "${APP_DIR}/.buildozer" -name "weakproxy.pyx" -exec sed -i 's/def __long__(self):/def __index__(self):/' {} \;
+    find "${APP_DIR}/.buildozer" -name "weakproxy.pyx" -exec sed -i 's/return long(self.__ref__())/return int(self.__ref__())/' {} \;
 
     local newsum=$(md5sum "$F" | cut -d' ' -f1)
     if [ "$oldsum" != "$newsum" ]; then
