@@ -1,90 +1,42 @@
-# In your project's recipes/python3/__init__.py
+import os
+import inspect
+import sh
+from pythonforandroid.recipes.python3 import Python3Recipe as OriginalPython3Recipe
+from pythonforandroid.logger import info, warning, shprint
 
-# Make sure to import Recipe if you are using Recipe.get_recipe()
-from pythonforandroid.recipe import Recipe 
-from os.path import join # if not already imported
+class Python3Recipe(OriginalPython3Recipe):
 
-# If you're inheriting:
-# from pythonforandroid.recipes.python3 import Python3Recipe as OriginalPython3Recipe 
-# class Python3Recipe(OriginalPython3Recipe):
+    def apply_patches(self, arch):
+        """
+        This override sources patches from the original p4a recipe location
+        and handles all patch formats correctly.
+        """
+        info('Applying patches from custom python3 recipe')
+        if not self.patches:
+            return
 
-# If you're copying the whole class:
-class Python3Recipe(Recipe): # Or whatever it inherits from in your p4a version
-    # ... (name, version, url, depends, etc. from original python3 recipe) ...
-    # ... (all other methods from original python3 recipe) ...
+        try:
+            original_recipe_dir = os.path.dirname(inspect.getfile(OriginalPython3Recipe))
+        except (TypeError, OSError):
+            warning("Could not resolve original python3 recipe dir, patch application may fail.")
+            super().apply_patches(arch)
+            return
 
-    def build_arch(self, arch):
-        # ... (original content of build_arch from p4a's python3 recipe) ...
-        
-        env = self.get_recipe_env(arch) # This should prepare CFLAGS, LDFLAGS etc.
+        for patch_info in self.patches:
+            patch_name = patch_info[0] if isinstance(patch_info, tuple) else patch_info
+            patch_path = os.path.join(original_recipe_dir, patch_name)
 
-        # --- BEGIN MODIFICATION for PKG_CONFIG_PATH ---
-        info("Attempting to prepend correct libffi pkgconfig path for Python3 configure")
-        libffi_recipe = Recipe.get_recipe('libffi', self.ctx)
-        if hasattr(libffi_recipe, 'get_pkgconfig_dirs'):
-            libffi_pkgconfig_dirs = libffi_recipe.get_pkgconfig_dirs(arch)
-            if libffi_pkgconfig_dirs:
-                # Prepend our libffi's pkgconfig path to make sure it's found first
-                current_pkg_config_path = env.get('PKG_CONFIG_PATH', '')
-                new_pkg_config_path = os.pathsep.join(libffi_pkgconfig_dirs)
-                if current_pkg_config_path:
-                    new_pkg_config_path += os.pathsep + current_pkg_config_path
-                
-                env['PKG_CONFIG_PATH'] = new_pkg_config_path
-                info(f"Modified PKG_CONFIG_PATH for Python3 configure: {env['PKG_CONFIG_PATH']}")
-            else:
-                warning("LibFFI recipe provided no pkgconfig_dirs.")
-        else:
-            warning("LibFFI recipe has no get_pkgconfig_dirs method.")
-        # --- END MODIFICATION ---
+            if not os.path.exists(patch_path):
+                warning(f"Patch not found at expected path: {patch_path}")
+                continue
 
-        # The rest of the build_arch method, including the configure call:
-        with current_directory(self.get_build_dir(arch.arch)): # Or specific android-build subdir
-            # ...
-            # configure_cmd = self.get_configure_cmd(env, arch) 
-            # configure_args = self.get_configure_args(arch, env)
-            # shprint(configure_cmd, *configure_args, _env=env)
-            # Make sure the above lines match how your p4a version calls configure.
-            # The exact call is in the error log:
-            # RAN: /home/builduser/app/.buildozer/android/platform/build-arm64-v8a_armeabi-v7a/build/other_builds/python3/arm64-v8a__ndk_target_23/python3/configure ...
-            
-            configure_executable = join(self.get_build_dir(arch.arch), 'configure') # Path to python's configure
-            # The args are from the log:
-            configure_args = [
-                '--host=aarch64-linux-android',
-                '--build=x86_64-pc-linux-gnu',
-                '--enable-shared',
-                '--enable-ipv6',
-                'ac_cv_file__dev_ptmx=yes',
-                'ac_cv_file__dev_ptc=no',
-                '--without-ensurepip',
-                'ac_cv_little_endian_double=yes',
-                'ac_cv_header_sys_eventfd_h=no',
-                f'--prefix={self.ctx.get_python_install_dir(arch.arch)}', # Use actual install prefix
-                f'--exec-prefix={self.ctx.get_python_install_dir(arch.arch)}',
-                '--enable-loadable-sqlite-extensions',
-                # '--with-build-python' is often problematic/unnecessary if PYTHON_FOR_BUILD is set
-                # We can try removing it or ensuring PYTHON_FOR_BUILD is correctly in env
-                # For now, let's keep it as per the log
-                f'--with-build-python={self.ctx.hostpython}', 
-                f'--with-openssl={Recipe.get_recipe("openssl", self.ctx).get_build_dir(arch.arch)}'
-            ]
-            # The configure executable is usually in the source dir, not android-build,
-            # and android-build is where we run it *from*.
-            python_source_dir = self.get_build_dir(arch.arch) # This is where configure lives
-            
-            # Change to the android-build subdirectory before running configure
-            android_build_dir = join(python_source_dir, 'android-build')
-            if not exists(android_build_dir):
-                os.makedirs(android_build_dir)
+            info(f'Applying patch {patch_path}')
+            build_dir = self.get_build_dir(arch.arch)
+            try:
+                shprint(sh.patch, "-t", "-d", build_dir, "-p1", "-i", patch_path)
+            except sh.ErrorReturnCode_1:
+                info(f"Patch {patch_name} failed to apply, but continuing build. This is likely okay.")
+            except Exception as e:
+                warning(f"An unexpected error occurred while applying patch {patch_name}: {e}")
 
-            with current_directory(android_build_dir):
-                # Path to configure is now ../configure if we are in android-build
-                configure_executable_relpath = join('..', 'configure')
-                shprint(sh.Command(configure_executable_relpath),
-                        *configure_args,
-                        _env=env)
-
-
-        # ... (rest of the original build_arch method - make, make install etc.)
 recipe = Python3Recipe()

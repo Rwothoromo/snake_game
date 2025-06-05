@@ -108,7 +108,7 @@ buildozer android clean
 
 # First build attempt (downloads sources, builds libffi with custom recipe, 
 # extracts Kivy/Pyjnius etc. May fail on other unpatched Cython or succeed through libffi)
-buildozer -v android debug --log-level 2 --debug 2>&1 | tee logs/buildozer.log || true
+buildozer -v android debug --log-level 2 --debug 2>&1 || true
 cp logs/buildozer.log logs/buildozer_log.txt
 
 # Apply Cython (Kivy/Pyjnius) and ctypes patches now that their sources are available
@@ -131,7 +131,7 @@ cp logs/buildozer.log logs/buildozer_log.txt
 #### Quick APK Build (One-Liner)
 
 ```bash
-docker-compose build && docker-compose run buildozer bash -c "buildozer android clean && buildozer android debug --log-level 2 || true && sudo ./patch_py2to3.sh && ./fix_ctypes.sh && buildozer -v android debug --log-level 2"
+docker-compose build && docker-compose run buildozer bash -c "buildozer android clean && buildozer android debug --log-level 2 || true && sudo ./patch_py2to3.sh && ./fix_ctypes.sh && buildozer -v android debug --log-level 2 --debug 2>&1 | tee -a logs/buildozer.log || true"
 ```
 
 ---
