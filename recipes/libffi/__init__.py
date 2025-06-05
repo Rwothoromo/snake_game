@@ -101,27 +101,30 @@ class LibFFIRecipe(Recipe):
             with open(target_configure_file, 'r') as f:
                 original_lines = f.readlines()
 
-            lines = list(original_lines)
-            has_m4_pattern_allow = any(re.search(r"m4_pattern_allow\s*\(\s*\[LT_SYS_SYMBOL_USCORE\]\s*\)", line_content) for line_content in lines)
-            has_ac_config_macro_dirs = any(re.search(r"AC_CONFIG_MACRO_DIRS?\s*\(\s*\[m4\]\s*\)", line_content) for line_content in lines)
+            lines = list(original_lines) 
+            has_m4_pattern_allow = any(re.search(r"m4_pattern_allow\s*\(\s*\[LT_SYS_SYMBOL_USCORE\]\s*\)", line_content) for line_content in lines) # Use line_content
+            has_ac_config_macro_dirs = any(re.search(r"AC_CONFIG_MACRO_DIRS?\s*\(\s*\[m4\]\s*\)", line_content) for line_content in lines) # Use line_content, ensure var name is single underscore
 
             ac_init_index = -1
-            for i, line_content in enumerate(lines):
-                if line_content.strip().startswith("AC_INIT"):
+            for i, line_content in enumerate(lines): # Use line_content
+                if line_content.strip().startswith("AC_INIT"): 
                     ac_init_index = i
                     break
-
+            
             modified_configure_ac = False
             if ac_init_index != -1:
-                lines_inserted_count = 0
+                insert_index = ac_init_index + 1 
+                lines_inserted_this_pass = 0 # Track insertions in this block
                 if not has_m4_pattern_allow:
-                    lines.insert(ac_init_index + 1 + lines_inserted_count, 'm4_pattern_allow([LT_SYS_SYMBOL_USCORE])\n')
-                    lines_inserted_count += 1
+                    lines.insert(insert_index + lines_inserted_this_pass, 'm4_pattern_allow([LT_SYS_SYMBOL_USCORE])\n')
+                    lines_inserted_this_pass +=1
                     modified_configure_ac = True
                     info(f"[{self.name}] Inserted m4_pattern_allow.")
-                if not has_ac_config_macro_dirs:
-                    lines.insert(ac_init_index + 1 + lines_inserted_count, 'AC_CONFIG_MACRO_DIRS([m4])\n')
-                    modified_configure_ac = True
+                
+                if not has_ac_config_macro_dirs: 
+                    lines.insert(insert_index + lines_inserted_this_pass, 'AC_CONFIG_MACRO_DIRS([m4])\n')
+                    # lines_inserted_this_pass +=1 # Not needed if it's the last one in this sequence
+                    if not modified_configure_ac: modified_configure_ac = True # Ensure flag is set if this is the only change
                     info(f"[{self.name}] Inserted AC_CONFIG_MACRO_DIRS.")
             else:
                 warning(f"[{self.name}] AC_INIT not found in {target_configure_file}. Cannot reliably patch.")
