@@ -96,11 +96,7 @@ sudo chown -R $(whoami):$(whoami) $HOME/.buildozer $APP_DIR/.buildozer
 # Set PATH for SDK tools
 export PATH="${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:${ANDROID_SDK_ROOT}/platform-tools:${PATH}"
 
-# Patch download.sh to always remove the directories before cloning
-find .buildozer -path "*/SDL2_image/external/download.sh" | while read SH; do
-  sed -i '/git clone.*libpng/i rm -rf libpng' "$SH"
-  sed -i '/git clone.*jpeg/i rm -rf jpeg' "$SH"
-done
+./fix_sdl2_image_download.sh
 
 # Clean previous builds
 buildozer distclean
@@ -109,7 +105,6 @@ buildozer android clean
 # First build attempt (downloads sources, builds libffi with custom recipe, 
 # extracts Kivy/Pyjnius etc. May fail on other unpatched Cython or succeed through libffi)
 buildozer -v android debug --log-level 2 --debug 2>&1 || true
-cp logs/buildozer.log logs/buildozer_log.txt
 
 # Apply Cython (Kivy/Pyjnius) and ctypes patches now that their sources are available
 sudo ./patch_py2to3.sh # This script now only handles Cython for Kivy/Pyjnius etc.
@@ -131,7 +126,20 @@ cp logs/buildozer.log logs/buildozer_log.txt
 #### Quick APK Build (One-Liner)
 
 ```bash
-docker-compose build && docker-compose run buildozer bash -c "buildozer android clean && buildozer android debug --log-level 2 || true && sudo ./patch_py2to3.sh && ./fix_ctypes.sh && buildozer -v android debug --log-level 2 --debug 2>&1 | tee -a logs/buildozer.log || true"
+docker-compose build && \
+docker-compose run buildozer bash -c "\
+chmod +x *.sh && \
+sudo chown -R \$(whoami):\$(whoami) \$HOME/.buildozer \$APP_DIR/.buildozer && \
+./fix_android_sdk.sh && \
+export PATH=\"\${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:\${ANDROID_SDK_ROOT}/platform-tools:\$PATH\" && \
+./fix_sdl2_image_download.sh && \
+buildozer distclean && \
+buildozer android clean && \
+buildozer -v android debug --log-level 2 --debug 2>&1 || true && \
+sudo ./patch_py2to3.sh && \
+./fix_ctypes.sh && \
+buildozer -v android debug --log-level 2 --debug 2>&1 | tee -a logs/buildozer.log || true && \
+cp logs/buildozer.log logs/buildozer_log.txt"
 ```
 
 ---

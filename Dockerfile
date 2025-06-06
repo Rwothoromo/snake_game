@@ -22,12 +22,14 @@ RUN dpkg --add-architecture i386 && \
         libcairo2-dev libcups2-dev libbz2-dev libffi-dev libgdbm-dev liblzma-dev \
         libncurses5-dev libncursesw5-dev libnss3-dev libreadline-dev libsqlite3-dev \
         libssl-dev libtinfo5 libtool libtool-bin locales m4 nano openjdk-17-jdk \
-        libncurses5:i386 libstdc++6:i386 libgtk2.0-0:i386 \
+        libcurl4-openssl-dev libncurses5:i386 libstdc++6:i386 libgtk2.0-0:i386 \
         patch pkg-config python3-dev python3-pip python3-setuptools sudo unzip wget zip zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Set locale
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
+
+RUN git config --global http.sslBackend openssl
 
 # Upgrade pip and install Python dependencies
 RUN python -m pip install --upgrade pip setuptools wheel --no-cache-dir && \
