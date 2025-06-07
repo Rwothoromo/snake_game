@@ -26,10 +26,10 @@ RUN dpkg --add-architecture i386 && \
         patch pkg-config python3-dev python3-pip python3-setuptools sudo unzip wget zip zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Set locale
-RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
+# # Set locale
+# RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
 
-RUN git config --global http.sslBackend openssl
+# RUN git config --global http.sslBackend openssl
 
 # Upgrade pip and install Python dependencies
 RUN python -m pip install --upgrade pip setuptools wheel --no-cache-dir && \

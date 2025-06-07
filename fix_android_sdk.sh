@@ -35,15 +35,14 @@ else
 fi
 find "${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin" -type f -exec chmod +x {} \;
 
-# 2. Ensure legacy tools/bin/sdkmanager symlink exists
-#    The Dockerfile should have created this.
+# Ensure legacy tools/bin/sdkmanager symlink exists (for legacy buildozer/p4a compatibility)
 echo "Step 2: Verifying legacy sdkmanager symlink..."
 mkdir -p "${ANDROID_SDK_ROOT}/tools/bin"
-if [ ! -L "${ANDROID_SDK_ROOT}/tools/bin/sdkmanager" ]; then
-    echo "Legacy symlink not found, creating..."
-    ln -sf "${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager" "${ANDROID_SDK_ROOT}/tools/bin/sdkmanager"
+ln -sf "${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager" "${ANDROID_SDK_ROOT}/tools/bin/sdkmanager"
+if [ -L "${ANDROID_SDK_ROOT}/tools/bin/sdkmanager" ]; then
+    echo "Legacy symlink created: ${ANDROID_SDK_ROOT}/tools/bin/sdkmanager -> ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager"
 else
-    echo "Legacy symlink found."
+    echo "Failed to create legacy sdkmanager symlink!"
 fi
 
 # 3. Accept licenses (crucial)

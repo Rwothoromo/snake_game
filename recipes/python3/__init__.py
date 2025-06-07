@@ -7,10 +7,6 @@ from pythonforandroid.logger import info, warning, shprint
 class Python3Recipe(OriginalPython3Recipe):
 
     def apply_patches(self, arch):
-        """
-        This override sources patches from the original p4a recipe location
-        and handles all patch formats correctly.
-        """
         info('Applying patches from custom python3 recipe')
         if not self.patches:
             return

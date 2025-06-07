@@ -2,7 +2,7 @@ import os
 from os.path import join, exists
 from multiprocessing import cpu_count
 from pythonforandroid.recipe import Recipe
-from pythonforandroid.logger import shprint, info
+from pythonforandroid.logger import shprint, info, warning
 from pythonforandroid.util import current_directory
 import sh
 
@@ -10,26 +10,35 @@ class LibFFIRecipe(Recipe):
     name = 'libffi'
     version = '3.4.4'
     url = 'https://github.com/libffi/libffi/releases/download/v{version}/libffi-{version}.tar.gz'
-    
-    # We will let the build system find the .so file in the libs_dir
-    # by overriding get_library_source_path instead of using built_libraries
-    
+
+    @property
+    def built_libraries(self):
+        """
+        Dynamically finds the .so file in the correct, arch-specific subdirectory.
+        This is a workaround for the complex build process of libffi.
+        """
+        first_arch = self.ctx.archs[0]
+        host_string = self.get_host(first_arch)
+        # The key fix is here: do NOT include self.name in the path, as the
+        # build system adds it automatically.
+        libs_path = join(host_string, '.libs')
+        return {'libffi.so': libs_path}
+
     def get_host(self, arch):
-        """Returns the host string for the given architecture object."""
+        """Returns the host string for a given architecture object."""
         if 'arm64' in arch.arch:
             return 'aarch64-unknown-linux-android'
         elif 'armeabi-v7a' in arch.arch:
             return 'arm-unknown-linux-androideabi'
         raise ValueError(f"Unsupported architecture: {arch.arch}")
 
-    def get_library_source_path(self, arch, lib_name, lib_dir=None):
+    def get_build_container_dir(self, arch_iface):
         """
-        This is a key fix. It tells the build system exactly where to find the
-        compiled .so file inside the architecture-specific subdirectory.
+        Overridden to point to the correct subdirectory where libffi builds,
+        which is named after the host platform string.
         """
-        host = self.get_host(arch)
-        # The path is .../build/other_builds/libffi/arch/libffi/<host_subdir>/.libs/libffi.so
-        return join(self.get_build_dir(arch.arch), host, '.libs', lib_name)
+        arch_name = arch_iface.arch if hasattr(arch_iface, 'arch') else arch_iface
+        return join(self.ctx.build_dir, 'other_builds', self.name, arch_name, self.name)
 
     def build_arch(self, arch):
         env = self.get_recipe_env(arch)
@@ -62,7 +71,6 @@ class LibFFIRecipe(Recipe):
             shprint(sh.make, f'-j{jobs}', _env=env)
             shprint(sh.make, 'install', _env=env)
 
-    # These methods are REQUIRED by the python3 recipe to find our headers and libs.
     def get_include_dirs(self, arch):
         install_dir = self.ctx.get_python_install_dir(arch.arch)
         return [join(install_dir, 'include')]
