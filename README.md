@@ -78,6 +78,7 @@ docker volume rm snake_game_buildozer_cache || true
 
 # Build and start the Docker container
 docker-compose build
+# Enter the Docker container
 docker-compose run buildozer bash
 ```
 
@@ -126,6 +127,9 @@ cp logs/buildozer.log logs/buildozer_log.txt
 #### Quick APK Build (One-Liner)
 
 ```bash
+docker-compose down --remove-orphans
+docker volume rm snake_game_buildozer_cache || true
+
 docker-compose build && \
 docker-compose run buildozer bash -c "\
 chmod +x *.sh && \

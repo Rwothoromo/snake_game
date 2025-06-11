@@ -20,7 +20,7 @@ charset-normalizer
 cliapp
 click
 cryptography
-Cython
+Cython==0.29.36
 defer
 dill
 distlib
