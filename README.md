@@ -97,6 +97,9 @@ sudo chown -R $(whoami):$(whoami) $HOME/.buildozer $APP_DIR/.buildozer
 # Set PATH for SDK tools
 export PATH="${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin:${ANDROID_SDK_ROOT}/platform-tools:${PATH}"
 
+# Tell the linker where to find libffi
+export LD_LIBRARY_PATH=/home/builduser/app/.buildozer/android/platform/build-arm64-v8a_armeabi-v7a/build/other_builds/libffi/armeabi-v7a__ndk_target_23/libffi/.libs:$LD_LIBRARY_PATH
+
 ./fix_sdl2_image_download.sh
 
 # Clean previous builds
@@ -108,11 +111,10 @@ buildozer android clean
 buildozer -v android debug --log-level 2 --debug 2>&1 || true
 
 # Apply Cython (Kivy/Pyjnius) and ctypes patches now that their sources are available
-sudo ./patch_py2to3.sh # This script now only handles Cython for Kivy/Pyjnius etc.
+sudo ./patch_py2to3.sh
 ./fix_ctypes.sh
 
-# Second build attempt (should use patched Kivy/Pyjnius; libffi should be good from 1st attempt)
-# If the first attempt fully succeeded, this might not be strictly necessary but is safe.
+# Second build attempt. If the first attempt fully succeeded, this might not be strictly necessary but is safe.
 buildozer -v android debug --log-level 2 --debug 2>&1 | tee -a logs/buildozer.log || true
 cp logs/buildozer.log logs/buildozer_log.txt
 ```
@@ -159,8 +161,6 @@ cp logs/buildozer.log logs/buildozer_log.txt"
 
 ### Android
 
-- **pyjnius errors**  
-    Edit problematic files in `.buildozer` or use provided patch scripts.
 - **Android SDK/NDK issues**  
     Run `./fix_android_sdk.sh` and ensure all licenses are accepted.
 - **API 30/33 not found**  

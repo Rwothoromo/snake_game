@@ -1,0 +1,11 @@
+--- a/configure
++++ b/configure
+@@ -2982,7 +2982,7 @@
+ 
+ esac
+ 
+-LDFLAGS="-L$prefix/lib $LDFLAGS"
++LDFLAGS="-L$prefix/lib $LDFLAGS -L$UNIVERSE_BUILD_PREFIX/lib"
+ # On AIX, force all executables to be 32-bit.
+ # On other platforms, this is not needed.
+ case $ac_sys_system in

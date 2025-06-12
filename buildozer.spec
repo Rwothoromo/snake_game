@@ -40,8 +40,8 @@ version = 1.0.0
 # version.filename = %(source.dir)s/main.py
 
 # (list) Application requirements
-# comma separated e.g. requirements = hostpython3==3.11, sqlite3, python3crystax==3.6, kivy
-requirements = hostpython3==3.8.16,python3==3.8.16,kivy,setuptools
+# comma separated e.g. requirements = hostpython3==3.9.9, sqlite3, python3crystax==3.6, kivy
+requirements = hostpython3==3.9.9,python3==3.9.9,kivy,setuptools
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -113,7 +113,7 @@ android.ndk = 25b
 #android.ndk_path = %(HOME)s/android-ndk-r25b
 
 # (str) Android NDK flags
-android.ndk_flags = -Wno-macro-redefined
+#android.ndk_flags = -Wno-macro-redefined -D__ANDROID_API__=23
 
 # (int) Android NDK API to use
 android.ndk_api = 23
@@ -152,7 +152,7 @@ android.accept_sdk_license = True
 
 # (list) List of Java files to add to the android project (can be java or a
 # directory containing the files)
-#android.add_src = /usr/include/python3.8
+#android.add_src = /usr/include/python3.9
 
 # (list) Android AAR archives to add (currently works only with sdl2_gradle
 # bootstrap)
@@ -168,7 +168,7 @@ android.gradle_use_cached_dependencies = True
 #android.add_activites = com.example.ExampleActivity
 
 # (str) python-for-android branch to use, defaults to stable
-p4a.branch = master
+#p4a.branch = master
 
 # (str) OUYA Console category. Should be one of GAME or APP
 # If you leave this blank, OUYA support will not be enabled

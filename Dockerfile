@@ -1,4 +1,4 @@
-FROM python:3.8-slim-bookworm
+FROM python:3.9-slim-bookworm
 
 LABEL maintainer="Elijah Rwothoromo <https://github.com/Rwothoromo/snake_game>"
 
@@ -33,10 +33,7 @@ RUN dpkg --add-architecture i386 && \
 
 # Upgrade pip and install Python dependencies
 RUN python -m pip install --upgrade pip setuptools wheel --no-cache-dir && \
-    pip install "cython>=0.29,<3.0" "buildozer!=0.33" appdirs colorama pyjnius pyOpenssl python-for-android --no-cache-dir
-
-# Upgrade Cython to 0.28.6 (as root, before switching to builduser)
-RUN pip install --upgrade cython==0.28.6
+    pip install cython "buildozer!=0.33" appdirs colorama pyjnius pyOpenssl python-for-android --no-cache-dir
 
 # Create non-root user and directories
 RUN useradd -m builduser && \

@@ -20,7 +20,7 @@ charset-normalizer
 cliapp
 click
 cryptography
-Cython==0.29.36
+Cython
 defer
 dill
 distlib
@@ -79,7 +79,6 @@ progressbar
 propcache
 protobuf
 ptyprocess
-pycairo
 pycodestyle
 pycparser
 pycups
