@@ -1,0 +1,34 @@
+services:
+  buildozer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: kivy-buildozer
+    container_name: kivy-buildozer
+    dns:
+      - 8.8.8.8
+    volumes:
+      - .:/home/builduser/app:rw
+      - buildozer_cache:/home/builduser/app/.buildozer
+    working_dir: /home/builduser/app
+    tty: true
+    stdin_open: true
+    environment:
+      - PYTHONUNBUFFERED=1
+      - TZ=UTC
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 8G
+    networks:
+      - my_network
+
+volumes:
+  buildozer_cache:
+    driver: local
+
+networks:
+  my_network:
+    driver: bridge

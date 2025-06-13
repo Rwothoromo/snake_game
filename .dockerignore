@@ -1,0 +1,28 @@
+# Version control
+.git/
+.gitignore
+
+# Python virtual environments
+venv/
+env/
+*env/
+
+# Buildozer build artifacts 
+.buildozer/
+bin/
+
+# Logs and cache
+logs/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+
+# macOS files
+.DS_Store

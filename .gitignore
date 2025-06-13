@@ -11,15 +11,18 @@ venv/
 
 # Logs
 *.log
+*_log.txt
 
 # OS files
 .DS_Store
 Thumbs.db
 
+# Buildozer build directory
 .buildozer/
 buildozer.log
 
-bin
+# Kivy build directory
+bin/
 
 # Python cache
 *.pyc
